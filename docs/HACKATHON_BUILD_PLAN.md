@@ -1,6 +1,6 @@
 # Hackathon Build Plan (trimmed from MODEL_AND_BASELINE_PLAN.md)
 
-Status: proposal for Udit to approve and fold into `docs/ARCHITECTURE.md` and the specs before the 2:15 AM contract freeze. Full survey, citations and caveats are in `docs/MODEL_AND_BASELINE_PLAN.md`; section tags below like `[Plan §6.3]` point there.
+Status: proposal (updated for the role swap in `b8ccc48`: Disha owns research, perception and dashboard; Saptarshi owns data, uncertainty and science; Udit owns architecture, planning and integration; see `docs/ROLES.md`) for Udit to approve and fold into `docs/ARCHITECTURE.md` and the specs before the 2:15 AM contract freeze. Full survey, citations and caveats are in `docs/MODEL_AND_BASELINE_PLAN.md`; section tags below like `[Plan §6.3]` point there.
 
 ## 0. What we keep and what we cut
 
@@ -22,9 +22,9 @@ The base concept that earns points is **uncertainty carried end to end**: percep
 
 | Person | Machine | Use it for |
 |---|---|---|
-| Disha | MacBook Air M2, 16 GB, no CUDA (PyTorch `mps` backend works) | Data prep, DEM layers, Random Forest classifier, dashboard-free work. Do not train deep models on it |
+| Disha | MacBook Air M2, 16 GB, no CUDA (PyTorch `mps` backend works) | Perception (slope, roughness, rules, Random Forest), dashboard, research notes. Do not train deep models on it. Her SegFormer side-track code is run on Saptarshi's GPU |
 | Udit | Ryzen 7 PRO 7840U laptop, 16 GB, no usable GPU, **100 AWS credits** | Planner, pipeline, integration. If the SegFormer side track runs, rent one GPU instance (for example a single-GPU `g5.xlarge` class; price and quota not verified, check the console) and stop it after training |
-| Saptarshi | i5-12450H, RTX 3050 4 GB, 16 GB (CUDA) | Fine-tune SegFormer-B0 with small batches and `fp16` autocast. Monte Carlo and dashboard |
+| Saptarshi | i5-12450H, RTX 3050 4 GB, 16 GB (CUDA) | Data loader and simulated bands, uncertainty Monte Carlo, science ranking. Also the only CUDA machine: runs the SegFormer-B0 fine-tune (small batches, `fp16` autocast) using Disha's training script |
 
 All core stages are CPU-light at 512 by 512 (A* with numba is milliseconds; 100 slope Monte Carlo draws is seconds). Nothing in the main path needs a GPU. Install `torch` per machine (MPS, CUDA, CPU).
 
@@ -61,7 +61,10 @@ All core stages are CPU-light at 512 by 512 (A* with numba is milliseconds; 100 
  entropy, calibration plot, rover-view panel in dashboard. Optional.
 ```
 
-### Contract additions (proposal to Udit; existing fields unchanged)
+### Contract additions (proposal to Udit; existing fields unchanged; changes need both owners to agree)
+
+Owners: `HazardMap` additions are Disha's (perception) and Saptarshi's (the Monte Carlo that fills `slope_std_deg`); `ScienceTarget` is Saptarshi's; `CostMap`, `PathResult`, `PipelineResult` are Udit's.
+
 
 - `HazardMap`: add `class_probs` (K,H,W), `epistemic_std` (H,W), `slope_std_deg` (H,W).
 - `CostMap`: keep `cost_mean`, `cost_std`, `blocked`. Add `p_haz`.
@@ -85,7 +88,7 @@ All core stages are CPU-light at 512 by 512 (A* with numba is milliseconds; 100 
 
 ## 4. Data
 
-- **DEM:** the individual Jezero HiRISE pair DTM `DTEEC_023524_1985_023379_1985_U01` is listed at about 700 MB on the HiRISE site; the USGS Mars Sample Return mosaic set is a 5.3 GB zip (DOI 10.5066/P13CPYYU). Sources: [HiRISE DTM page](https://hirise.lpl.arizona.edu/dtm/ESP_023524_1985), [USGS MSR mosaics](https://astrogeology.usgs.gov/search/map/mars-sample-return-terrain-relative-navigation-hirise-dtm-mosaic). Disha should start the download first. On hotel/venue Wi-Fi this may be slow; **fallback:** a seeded fractal/crater synthetic DEM so the demo is never blocked.
+- **DEM:** the individual Jezero HiRISE pair DTM `DTEEC_023524_1985_023379_1985_U01` is listed at about 700 MB on the HiRISE site; the USGS Mars Sample Return mosaic set is a 5.3 GB zip (DOI 10.5066/P13CPYYU). Sources: [HiRISE DTM page](https://hirise.lpl.arizona.edu/dtm/ESP_023524_1985), [USGS MSR mosaics](https://astrogeology.usgs.gov/search/map/mars-sample-return-terrain-relative-navigation-hirise-dtm-mosaic). Saptarshi (data owner, `specs/05-data.md`) should start the download first and confirm the tile with Disha. On hotel/venue Wi-Fi this may be slow; **fallback:** a seeded fractal/crater synthetic DEM so the demo is never blocked.
 - **Spectral/ice/noise:** simulated, labelled as such, per the existing decision in `CONTEXT.md`. Keep the generator in `src/odyssey/data/`.
 - **AI4Mars (side track only):** Zenodo v0.6, 17.8 GB full. Download only a subset (a few thousand images plus labels) or skip the side track. Pixel codes 0-3 per Zenodo; confirm against its README.
 - Do **not** claim the AI4Mars model works on the orbital tile. It is a separate surface-view panel [Plan §4.1].
@@ -103,18 +106,18 @@ Run `pipeline.py` once per config and serialise the `PipelineResult`, so the dem
 
 ## 6. Workflow against the existing timeline
 
-Current checkpoints come from `docs/TIMELINE.md`. Do not change roles.
+Current checkpoints come from `docs/TIMELINE.md`. Roles follow the swapped `docs/ROLES.md`.
 
-| When | Disha | Udit | Saptarshi |
+| When | Disha (perception, dashboard) | Udit (planning, pipeline) | Saptarshi (data, uncertainty, science) |
 |---|---|---|---|
-| Now to 2:15 | Start DEM download. Crop 512². Write the simulated band generator | Approve contract additions above, freeze at 2:15, set up `pipeline.py` and config/seed | Dashboard shell with dummy `PipelineResult`. Download AI4Mars subset if the side track is on |
-| 2:30 to 4:00 | Horn slope, roughness, hard-block rule, rule classifier, RF trial | B0 cost map and A*/Dijkstra. Add CVaR edge cost, corridor | DEM Monte Carlo, candidate generation, ranking MC. Start SegFormer fine-tune on the 3050 if on |
+| Now to 2:15 | Dashboard shell with dummy `PipelineResult`. Perception spec 01 reviewed against the new contract fields. Decide the tile with Saptarshi | Approve contract additions above, freeze at 2:15, set up `pipeline.py` and config/seed | Start DEM download, crop 512². Simulated band, ice-signal, noise and gap generator with seed (spec 05). Fetch AI4Mars subset if the side track is on |
+| 2:30 to 4:00 | Horn slope, roughness, hard-block rule, rule classifier, Random Forest trial. Write the SegFormer fine-tune script (side track) | B0 cost map and A*/Dijkstra. Add CVaR edge cost, corridor | DEM Monte Carlo (correlated noise), candidate generation, ranking Monte Carlo. Run Disha's SegFormer fine-tune on the 3050 if on |
 | 4:00 to 4:30 | Break and decision: SegFormer side track keep or drop | | |
-| 4:30 to 6:00 | Hazard map with `class_probs` and `epistemic_std` delivered | Real cost map into A*. Inflation, risk curve, safety verifier, B1 reproduction | Rank intervals, evidence strings, calibration plot |
+| 4:30 to 6:00 | Hazard map with `class_probs` and `epistemic_std` delivered. Calibration plot if the side track is kept | Real cost map into A*. Inflation, risk curve, safety verifier, B1 reproduction | Rank intervals, evidence strings, `slope_std_deg` delivered |
 | 6:00 | First end-to-end `pipeline.py` run | owner of this | |
-| 6:00 to 7:30 | Failure scenes (noise, gaps, conflicting bands) | Wire planner outputs to dashboard | Cautious/bold toggle, noise slider, click-to-trace, risk curve chart |
+| 6:00 to 7:30 | Wire dashboard to real outputs: cautious/bold toggle, noise slider, click-to-trace, risk-vs-length chart | Wire planner outputs, support dashboard | Failure scenes (noise, gaps, conflicting bands), ranking checks |
 | 7:30 | Feature freeze | | |
-| After | README approach and limits, demo rehearsal, backup video | | |
+| After | README approach and limits, demo rehearsal, backup video (shared) | | |
 
 **Cut order if late** (extends the timeline's list): SegFormer side track, Dijkstra view, B1 baseline view, conformal wrapper, 3D polish, extra target categories. **Never cut:** cost map with `σ`, hazard-avoiding path, ranked targets with intervals, the cautious/bold dial, README limits, backup video.
 

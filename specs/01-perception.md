@@ -20,6 +20,10 @@ Out: full `TerrainGrid` and `HazardMap` (see `docs/ARCHITECTURE.md`).
 2. Rule-based hazards first: steep slope, high roughness, crater rim. Thresholds come from cited sources in `docs/RESEARCH_NOTES.md`.
 3. Terrain classes: Random Forest baseline. CNN is an experiment, kept only if it beats the baseline and we can still explain its output.
 4. Every hazard cell carries an evidence note (which rule or model fired).
+5. Use our own numpy Horn kernel for slope (no GPL dependency). Also output step height.
+6. Random Forest tree votes give `class_probs` and `epistemic_std`. Combine into `hazard_prob = 1 - (1 - P_slope)(1 - P_rough)(1 - P_class)`.
+7. Expose the slope kernel so the uncertainty module can call it inside the DEM Monte Carlo.
+8. Side track (optional, dropped at 4:00 AM if not working): write the SegFormer-B0 fine-tune script for the AI4Mars subset. It runs on Saptarshi's GPU.
 
 ## Acceptance checks
 

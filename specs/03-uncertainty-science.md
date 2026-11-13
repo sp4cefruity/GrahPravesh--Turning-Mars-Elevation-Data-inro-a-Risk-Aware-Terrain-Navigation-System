@@ -21,6 +21,9 @@ In: `TerrainGrid`, `HazardMap`. Out: per-cell mean and standard deviation, a lis
 4. Score each target as expected value divided by traversal cost, with a confidence interval from the Monte Carlo runs.
 5. Each target carries a plain-language evidence string: which signals, how reachable, how sure.
 6. Handle conflicting sensor readings by widening the interval, and say so in the evidence string.
+7. DEM Monte Carlo uses spatially correlated noise (Gaussian-filtered white noise) and calls Disha's slope kernel. Store only mean and std. Fill `slope_std_deg`, `cost_mean` and `cost_std`.
+8. Science ranking uses 1000 Monte Carlo draws over feature noise and weights. Output `rank_interval` and `p_top3` per target. Access cost is the path CVaR from the planner.
+9. Run the SegFormer fine-tune on the RTX 3050 if the side track is on (script from Disha). Drop at 4:00 AM if it is not working.
 
 ## Acceptance checks
 

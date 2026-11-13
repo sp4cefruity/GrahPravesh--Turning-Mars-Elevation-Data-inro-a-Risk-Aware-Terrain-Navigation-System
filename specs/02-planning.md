@@ -21,6 +21,12 @@ In: `HazardMap`, `TerrainGrid`, per-cell uncertainty. Out: `CostMap`, `PathResul
 4. Bold mode uses mean cost. Cautious mode adds a penalty on cost standard deviation.
 5. Safety check: the final path is verified against the hard-block mask and reports max slope and total risk.
 6. Each path segment can report its cost breakdown for the dashboard trace.
+7. Edge cost is Gaussian CVaR: `mean + std * phi(z_alpha) / (1 - alpha)`. Bold is `alpha = 0`, cautious is `alpha = 0.95`. This replaces the simple std penalty from item 4.
+8. Blocked cells are inflated with a distance-growing margin to model localization drift.
+9. Corridor is the set of cells where `D_start + D_goal <= (1 + tau) * best cost`.
+10. Baselines B0 (slope threshold plus A*) and B1 (Electronics-paper cost) run beside the proposed planner. Dijkstra is the optimality check.
+11. Produce a risk-versus-length curve over alpha, and `min_feasible_risk` when no safe path exists.
+12. Use numba, or plan on a 256 by 256 grid, so sweeps take seconds.
 
 ## Acceptance checks
 

@@ -1,6 +1,6 @@
 # Hackathon Build Plan (trimmed from MODEL_AND_BASELINE_PLAN.md)
 
-Status: proposal (updated for the role swap in `b8ccc48`: Disha owns research, perception and dashboard; Saptarshi owns data, uncertainty and science; Udit owns architecture, planning and integration; see `docs/ROLES.md`) for Udit to approve and fold into `docs/ARCHITECTURE.md` and the specs before the 2:15 AM contract freeze. Full survey, citations and caveats are in `docs/MODEL_AND_BASELINE_PLAN.md`; section tags below like `[Plan §6.3]` point there.
+Status: **approved by Udit and folded into `docs/ARCHITECTURE.md`**. Architecture, contracts, components, data and limits now live there, and that file wins if the two differ. This file stays as the workflow and demo reference (sections 1, 6 and 7). Roles follow `docs/ROLES.md`: Disha owns research, perception and dashboard; Saptarshi owns data, uncertainty and science; Udit owns architecture, planning and integration. Full survey, citations and caveats are in `docs/MODEL_AND_BASELINE_PLAN.md`; section tags below like `[Plan §6.3]` point there.
 
 ## 0. What we keep and what we cut
 

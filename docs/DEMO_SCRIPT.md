@@ -8,10 +8,10 @@ Draft. Fill in real numbers after the 9:00 AM rehearsal. Rehearse with a timer. 
 |---|---|---|
 | 0:00 to 0:45 | Udit | The story. MARS-09 lands somewhere risky, radio delay is long, it must decide alone. Three questions: where is it safe, how do we get there, what is worth seeing and how sure are we. |
 | 0:45 to 2:00 | Udit | Architecture on one slide. Perception, uncertainty, planning, science, dashboard. Mention the contracts and the hard safety rule. |
-| 2:00 to 3:15 | Disha | Perception. Real DEM tile, slope and roughness, hazard map. Say clearly what is simulated. Show how thresholds were chosen. |
-| 3:15 to 5:15 | Saptarshi | Live dashboard. Cost map, planned path avoiding hazards, ranked science targets with confidence bands. Click a target to show its evidence string. |
-| 5:15 to 6:45 | Saptarshi, Udit | The moment that sells it. Raise the sensor noise and add missing data. The path and ranks shift. Switch to cautious mode and show the safer, longer route. Show the path safety check passing. |
-| 6:45 to 7:30 | Disha | Honest limits. Simulated bands, single tile, no wheel slip. What we would do next. |
+| 2:00 to 3:15 | Saptarshi, Disha | Data and perception. Saptarshi: real DEM tile, what is simulated and why. Disha: slope, roughness, hazard map and how thresholds were chosen. |
+| 3:15 to 5:15 | Disha | Live dashboard. Cost map, planned path avoiding hazards, ranked science targets with confidence bands. Click a target to show its evidence string. |
+| 5:15 to 6:45 | Disha drives, Saptarshi narrates uncertainty, Udit explains the planner | The moment that sells it. Raise the sensor noise and add missing data. The path and ranks shift. Switch to cautious mode and show the safer, longer route. Show the path safety check passing. |
+| 6:45 to 7:30 | Saptarshi | Honest limits. Simulated bands, single tile, no wheel slip. What we would do next. |
 | 7:30 to 8:00 | Udit | Close. Map back to the judging criteria in one sentence each. |
 
 ## Q&A prep (4 minutes)

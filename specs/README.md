@@ -21,7 +21,8 @@ Only the status line changes between stages. If requirements change after approv
 | `01-perception.md` | Disha | draft |
 | `02-planning.md` | Udit | draft |
 | `03-uncertainty-science.md` | Saptarshi | draft |
-| `04-dashboard.md` | Saptarshi | draft |
+| `04-dashboard.md` | Disha | draft |
+| `05-data.md` | Saptarshi | draft |
 
 Use `TEMPLATE.md` for any new spec.
 

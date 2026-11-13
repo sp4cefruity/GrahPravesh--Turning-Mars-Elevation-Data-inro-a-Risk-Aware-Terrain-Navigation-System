@@ -1,4 +1,4 @@
-# Spec 01: Perception and Data
+# Spec 01: Perception
 
 Status: draft
 Owner: Disha
@@ -7,21 +7,19 @@ Serves criteria: technical depth, uncertainty, explainability
 
 ## Purpose
 
-Turn a real DEM tile plus simulated spectral bands into slope, roughness, terrain classes and a hazard map.
+Turn the raw scene from `specs/05-data.md` into slope, roughness, terrain classes and a hazard map.
 
 ## Inputs and outputs
 
-In: DEM tile (about 512 by 512), simulated bands, noise settings.
-Out: `TerrainGrid` and `HazardMap` (see `docs/ARCHITECTURE.md`).
+In: raw `TerrainGrid` from the data module (DEM, simulated bands, valid mask).
+Out: full `TerrainGrid` and `HazardMap` (see `docs/ARCHITECTURE.md`).
 
 ## Requirements
 
-1. Load and crop the DEM, record source and licence.
-2. Derive slope, roughness and aspect.
-3. Generate simulated spectral bands, a simulated ice signal, noise and missing-data patches. Tag them as simulated.
-4. Rule-based hazards first: steep slope, high roughness, crater rim. Thresholds come from cited sources in `docs/RESEARCH_NOTES.md`.
-5. Terrain classes: Random Forest baseline. CNN is an experiment, kept only if it beats the baseline and we can still explain its output.
-6. Every hazard cell carries an evidence note (which rule or model fired).
+1. Derive slope, roughness and aspect from the DEM.
+2. Rule-based hazards first: steep slope, high roughness, crater rim. Thresholds come from cited sources in `docs/RESEARCH_NOTES.md`.
+3. Terrain classes: Random Forest baseline. CNN is an experiment, kept only if it beats the baseline and we can still explain its output.
+4. Every hazard cell carries an evidence note (which rule or model fired).
 
 ## Acceptance checks
 
@@ -40,4 +38,4 @@ Real multispectral products, atmospheric correction.
 
 ## Open questions
 
-- Which tile? Disha to confirm by 1:00 AM.
+- Tile choice is owned by Saptarshi in `specs/05-data.md`. Disha confirms it by 1:00 AM.

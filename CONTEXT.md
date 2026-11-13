@@ -2,7 +2,7 @@
 
 Hackathon: HackInnovision 2026, November 14, 2026, 12:00 AM to 12:00 PM (12 hours).
 Track: A, Planetary Reconnaissance and Autonomous Navigation (Odyssey).
-Team: Udit (architecture, planner, integration), Disha (research, perception, data), Saptarshi (uncertainty, science ranking, dashboard).
+Team: Udit (architecture, planner, integration), Disha (research, perception, interactive dashboard), Saptarshi (data, uncertainty, science ranking).
 
 ## The problem in one paragraph
 

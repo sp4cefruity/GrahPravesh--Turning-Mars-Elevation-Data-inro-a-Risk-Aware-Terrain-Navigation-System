@@ -1,7 +1,7 @@
 # Spec 04: Dashboard
 
 Status: draft
-Owner: Saptarshi
+Owner: Disha
 Reviewer: Udit
 Serves criteria: usability, explainability, uncertainty
 

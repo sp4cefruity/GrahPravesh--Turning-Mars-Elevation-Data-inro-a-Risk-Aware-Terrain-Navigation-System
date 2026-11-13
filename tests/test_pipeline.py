@@ -9,12 +9,12 @@ import numpy as np
 from odyssey import pipeline
 from odyssey.config import PipelineConfig, Seeds
 from odyssey.contracts import MODES, PathResult
+from synthetic import synthetic_terrain
 
 
-def test_runs_end_to_end_with_only_data_stubbed():
+def test_runs_end_to_end_with_every_stage_real():
     res = pipeline.run_pipeline(PipelineConfig())
     assert res.complete, res.error
-    assert set(res.stub_stages) == {"data"}
     assert res.default_target_id is not None
     assert res.targets and res.risk_curve and set(res.baseline_paths) == {"b0", "b1"}
     for by_mode in res.paths.values():
@@ -65,7 +65,7 @@ def test_stage_exception_is_recorded_and_stops_the_run():
 
 def test_contract_violation_names_the_stage():
     def wrong_shape(config):
-        t = pipeline.stubs.stub_load_terrain(config)
+        t = synthetic_terrain(config)
         t.valid_mask = t.valid_mask[:10]
         return t
 
@@ -79,24 +79,29 @@ def test_missing_slope_std_is_caught():
 
 
 def test_start_inside_a_block_stops_the_run():
-    res = pipeline.run_pipeline(PipelineConfig(start=(32, 30)))  # on the stub ridge
+    res = pipeline.run_pipeline(PipelineConfig(start=(32, 30)),  # on the synthetic scene's ridge
+                                overrides={"data": synthetic_terrain})
     assert not res.complete and res.error.stage == "cost_map"
 
 
-def test_real_stage_is_picked_up_without_editing_the_pipeline(monkeypatch=None):
+def test_stage_is_looked_up_by_name_without_editing_the_pipeline(monkeypatch):
     import odyssey.data as data_pkg
     called = []
 
     def fake(config):
         called.append(1)
-        return pipeline.stubs.stub_load_terrain(config)
+        return synthetic_terrain(config)
 
-    data_pkg.load_terrain = fake
-    try:
-        res = pipeline.run_pipeline(PipelineConfig())
-    finally:
-        del data_pkg.load_terrain
-    assert called and "data" not in res.stub_stages
+    monkeypatch.setattr(data_pkg, "load_terrain", fake)
+    res = pipeline.run_pipeline(PipelineConfig())
+    assert called and res.complete, res.error
+
+
+def test_missing_stage_function_is_a_stage_failure(monkeypatch):
+    import odyssey.data as data_pkg
+    monkeypatch.delattr(data_pkg, "load_terrain")
+    res = pipeline.run_pipeline(PipelineConfig())
+    assert not res.complete and res.error.stage == "data" and "load_terrain" in res.error.reason
 
 
 def test_save_and_load_round_trip():

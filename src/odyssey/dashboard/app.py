@@ -148,7 +148,7 @@ segment = st.session_state.get("segment", 0) if n_seg else None
 # ---------------------------------------------------------------- banners
 
 for line in view.simulated_labels(res):
-    st.caption(f":orange[SIMULATED] {line}" if line.startswith(("Simulated", "Stub")) else line)
+    st.caption(f":orange[SIMULATED] {line}" if line.startswith("Simulated") else line)
 if res.default_target_id is None:
     st.warning("No safe path to any target in this scenario. Nothing is drawn as a route. "
                "Lower the noise or remove the missing data patch.")

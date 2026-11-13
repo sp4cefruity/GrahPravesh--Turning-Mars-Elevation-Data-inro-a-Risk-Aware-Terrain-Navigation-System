@@ -81,4 +81,4 @@ def test_monte_carlo_returns_mean_and_std_and_rejects_one_draw():
 
 def test_pipeline_uses_real_uncertainty():
     res = pipeline.run_pipeline(PipelineConfig())
-    assert "uncertainty" not in res.stub_stages and res.complete, res.error
+    assert res.complete, res.error

@@ -182,7 +182,6 @@ class PipelineResult:
     risk_curve: list[RiskCurvePoint] = field(default_factory=list)
     baseline_paths: dict[str, PathResult] = field(default_factory=dict)
     start: Optional[Cell] = None
-    stub_stages: list[str] = field(default_factory=list)  # stages that ran as stubs
     timings_s: dict[str, float] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)  # for example "no safe path to any target"
     error: Optional[StageFailure] = None

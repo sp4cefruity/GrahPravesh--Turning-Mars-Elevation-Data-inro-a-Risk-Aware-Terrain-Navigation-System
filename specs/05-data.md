@@ -71,13 +71,13 @@ Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5)
 - [x] The input DEM differs from truth, and the gap grows with the noise level
 - [x] Planted targets all sit on valid cells
 - [x] The conflict zone has ice high and thermal low
-- [x] The full pipeline completes on T1 to T5 with no stub stages (run by hand, not in pytest)
+- [x] The full pipeline completes on T1 to T5 with every stage real (run by hand, not in pytest)
 
 ## Uncertainty and failure handling
 
 - Each product carries a vertical error `sigma_z_m` (0.3 m, an assumption based on the HiRISE statement of tens of centimetres), used for the input noise.
 - If a window read fails, `load_tile` raises with the reason. There is no silent fallback.
-- Not built yet: the synthetic DEM fallback (the pipeline still has its own stub for a missing data stage), flagging likely DTM artifacts (seams, interpolated patches) and giving flagged cells a larger sigma. Only nodata is handled today.
+- Not built yet: the synthetic DEM fallback (a missing data stage now stops the run), flagging likely DTM artifacts (seams, interpolated patches) and giving flagged cells a larger sigma. Only nodata is handled today.
 - Results are reported per tile and per site, never pooled.
 
 ## Out of scope
@@ -95,7 +95,6 @@ Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5)
 
 - Udit: add `tile_id` (default "T1") to `PipelineConfig`. Until then the tile is `odyssey.data.DEFAULT_TILE`.
 - Udit: `docs/ARCHITECTURE.md` and `README.md` still say one tile, a 512 by 512 crop and a 700 MB download, and list the SegFormer side track.
-- Udit and Disha: four tests assume the stub scene and fail now the data stage is real: `test_pipeline.py::test_runs_end_to_end_with_only_data_stubbed`, `test_pipeline.py::test_start_inside_a_block_stops_the_run` (stub ridge at cell (32, 30)), and two in `test_dashboard.py` (`'dem'` in `simulated_layers`, `'data'` in `stub_stages`).
 - Saptarshi: `find_candidates` takes the highest few peaks of the whole ice and geology map (about 3 ice and 2 geology by default), so it mostly misses the planted targets. On T1 and T3 at most 2 of 10 were found, even with the planted signal made 5 times stronger. Options: score against the clean material fields instead of the planted blobs (add them to `SceneTruth`), or raise `n_candidates` for evaluation runs.
 - Saptarshi: confirm the licence of both products before committing any crops.
 - Saptarshi: build the synthetic DEM fallback and the artifact flags, or cut them from the spec.

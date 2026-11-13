@@ -194,6 +194,5 @@ def test_all_missing_input_fails_loudly():
 
 def test_pipeline_uses_real_perception_and_completes_with_gaps():
     res = pipeline.run_pipeline(PipelineConfig())
-    assert "perception" not in res.stub_stages
     assert res.complete, res.error
     assert np.isnan(res.terrain.slope_deg[~res.terrain.valid_mask]).all()

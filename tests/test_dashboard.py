@@ -155,7 +155,7 @@ def test_cell_trace_traces_every_layer_and_marks_simulated(res):
                 "cost_mean", "cost_std", "blocked", "terrain_class", "evidence", "valid", "simulated_inputs"):
         assert key in tr
     assert tr["evidence"]
-    assert "dem" in tr["simulated_inputs"]
+    assert tr["simulated_inputs"] == list(res.terrain.simulated_layers)
 
 
 def test_cell_trace_rejects_a_cell_outside_the_grid(res):
@@ -166,12 +166,10 @@ def test_cell_trace_rejects_a_cell_outside_the_grid(res):
 # ---------------------------------------------------------------- simulated labels
 
 
-def test_simulated_labels_list_layers_and_stub_stages(res):
+def test_simulated_labels_list_layers(res):
     text = " ".join(view.simulated_labels(res))
     for layer in res.terrain.simulated_layers:
         assert layer in text
-    for stage in res.stub_stages:
-        assert stage in text
 
 
 def test_layer_options_mark_simulated_layers(res):
@@ -211,7 +209,6 @@ def test_scenario_with_missing_data_marks_cells_invalid_and_labels_them(tmp_path
     assert (~hit.terrain.valid_mask).sum() > (~base.terrain.valid_mask).sum()
     assert hit.terrain.valid_mask[tuple(hit.start)]
     assert "missing_patch_simulated" in hit.terrain.simulated_layers
-    assert "data" in hit.stub_stages  # still reported as a stub when it is one
 
 
 def test_scenario_noise_changes_the_uncertainty(tmp_path):

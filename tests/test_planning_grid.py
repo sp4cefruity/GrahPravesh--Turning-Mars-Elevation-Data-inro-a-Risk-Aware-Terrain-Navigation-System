@@ -8,10 +8,12 @@ from odyssey import pipeline, planning
 from odyssey.config import PipelineConfig
 from odyssey.planning import coarse
 from odyssey.planning.costmap import build_cost_map
+from synthetic import synthetic_terrain
 
 
-def _big(n=512, **kw):
-    return dataclasses.replace(PipelineConfig(), stub_grid_size=n, **kw)
+def _run_big(cfg=None, n=512):
+    """Run the pipeline on an n by n synthetic scene, so the planning grid reduction is exercised."""
+    return pipeline.run_pipeline(cfg or PipelineConfig(), overrides={"data": lambda c: synthetic_terrain(c, n)})
 
 
 def test_factor_is_noop_at_or_below_the_limit():
@@ -38,14 +40,14 @@ def test_reduction_rules():
 
 
 def test_noop_case_plans_at_full_resolution_and_leaves_no_note():
-    res = pipeline.run_pipeline(PipelineConfig())  # 64 by 64
+    res = pipeline.run_pipeline(PipelineConfig())  # 256 by 256, the real tile
     assert res.complete, res.error
     assert not any("Planning searched" in n for n in res.notes)
     assert all(pr.dijkstra_cost == pr.total_cost for bm in res.paths.values() for pr in bm.values() if pr.cells)
 
 
 def test_512_input_is_safe_and_full_resolution():
-    res = pipeline.run_pipeline(_big(512))
+    res = _run_big()
     assert res.complete, res.error
     assert res.terrain.shape == (512, 512) and res.cost_map.blocked.shape == (512, 512)
     assert any("Planning searched a 256 by 256" in n for n in res.notes)
@@ -72,16 +74,16 @@ def test_512_input_is_safe_and_full_resolution():
 
 
 def test_512_is_deterministic():
-    a = pipeline.run_pipeline(_big(512))
-    b = pipeline.run_pipeline(_big(512))
+    a = _run_big()
+    b = _run_big()
     assert {c: {m: p.cells for m, p in bm.items()} for c, bm in a.paths.items()} == \
            {c: {m: p.cells for m, p in bm.items()} for c, bm in b.paths.items()}
 
 
 def test_planner_never_returns_a_path_through_a_block_a_coarse_cell_hides():
     """A one cell wall gap that the block max would close, and a lone blocked cell inside a block."""
-    cfg = _big(512)
-    res = pipeline.run_pipeline(cfg)
+    cfg = PipelineConfig()
+    res = _run_big(cfg)
     assert res.complete
     terrain, hazards = res.terrain, res.hazards
     hb = hazards.hard_block.copy()
@@ -99,8 +101,8 @@ def test_planner_never_returns_a_path_through_a_block_a_coarse_cell_hides():
 
 
 def test_blocked_goal_gives_reason_not_path_at_512():
-    res = pipeline.run_pipeline(_big(512))
-    cfg = _big(512)
+    res = _run_big()
+    cfg = PipelineConfig()
     cm = res.cost_map
     cand = dataclasses.replace(res.candidates[0])
     blocked = np.argwhere(cm.blocked)[0]

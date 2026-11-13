@@ -55,7 +55,7 @@ def targets_for_mode(res: C.PipelineResult, mode: str) -> tuple[list[C.ScienceTa
         return res.targets, ""
     swapped = {cid: {"cautious": by["bold"], "bold": by["bold"]} for cid, by in res.paths.items()}
     try:
-        fn, _ = pipeline.resolve_stage(pipeline.STAGES["science_ranking"])
+        fn = pipeline.resolve_stage(pipeline.STAGES["science_ranking"])
         ranked = fn(res.candidates, swapped, res.terrain, res.hazards, res.config)
         C.validate_targets(ranked, {c.id for c in res.candidates})
     except Exception as e:  # shown to the viewer, not hidden
@@ -184,8 +184,6 @@ def simulated_labels(res: C.PipelineResult) -> list[str]:
     out = []
     if res.terrain is not None and res.terrain.simulated_layers:
         out.append("Simulated layers: " + ", ".join(res.terrain.simulated_layers))
-    if res.stub_stages:
-        out.append("Stub stages, dummy output: " + ", ".join(res.stub_stages))
     if res.terrain is not None and res.terrain.source:
         out.append("Terrain source: " + res.terrain.source)
     return out
@@ -265,7 +263,7 @@ def run_scenario(config: PipelineConfig, sc: Scenario) -> C.PipelineResult:
         return base
 
     patch = missing_patch(base)
-    data_fn, is_stub = pipeline.resolve_stage(pipeline.STAGES["data"])
+    data_fn = pipeline.resolve_stage(pipeline.STAGES["data"])
 
     def data_with_patch(config: PipelineConfig) -> C.TerrainGrid:
         t = data_fn(config)
@@ -277,9 +275,5 @@ def run_scenario(config: PipelineConfig, sc: Scenario) -> C.PipelineResult:
         res = pipeline.run_pipeline(cfg, overrides={"data": data_with_patch})
     except Exception as e:
         return _failure(cfg, "dashboard_load", f"{type(e).__name__}: {e}")
-    if is_stub:
-        res.stub_stages.insert(0, "data")
-        res.notes = [n for n in res.notes if not n.startswith("Stub stages")]
-        res.notes.append("Stub stages in this run: " + ", ".join(res.stub_stages))
     res.notes.append("Missing data patch added by the dashboard (SIMULATED).")
     return res

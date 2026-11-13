@@ -72,8 +72,7 @@ class PipelineConfig:
     n_dem_draws: int = 50  # DEM Monte Carlo, 50 to 100
     n_ranking_draws: int = 1000  # ranking Monte Carlo
     planning_grid_size: int = 256  # documented default planning grid, 256 x 256 keeps sweeps to seconds
-    stub_grid_size: int = 64  # only used by the stub data stage
-    n_candidates: int = 5  # target count for the stub candidate stage
+    n_candidates: int = 5  # target number of candidates from the science stage
     output_dir: str = "outputs"
 
     def drift_margin_cells(self, shape: tuple[int, int]) -> float:

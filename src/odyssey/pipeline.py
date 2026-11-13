@@ -6,9 +6,9 @@ Order is fixed by specs/00-system.md:
   for the default goal, which is only known after step 7.
 
 How other roles plug in
-  Each stage is looked up by module and function name (see STAGES). If the function exists,
-  it is used. If not, the stub from `odyssey.stubs` runs and the stage name is listed in
-  `PipelineResult.stub_stages`. Nobody edits this file to plug in.
+  Each stage is looked up by module and function name (see STAGES) when it runs. A missing
+  module or function stops the run with a StageFailure for that stage. Nobody edits this file
+  to plug in.
 
 Failure rule (spec 00)
   If a stage raises or breaks its contract, the run stops, `result.error` holds the stage
@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from . import contracts as C
-from . import planning, stubs
+from . import planning
 from .config import PipelineConfig
 
 
@@ -38,47 +38,33 @@ class StageSpec:
     owner: str
     module: str  # module that should expose the real function
     func: str  # expected function name
-    stub: Optional[Callable[..., Any]]  # None for stages that have no stub (planning is real)
     signature: str  # documentation only
 
 
 STAGES: dict[str, StageSpec] = {s.name: s for s in [
-    StageSpec("data", "Saptarshi", "odyssey.data", "load_terrain", stubs.stub_load_terrain,
+    StageSpec("data", "Saptarshi", "odyssey.data", "load_terrain",
               "load_terrain(config) -> TerrainGrid (raw: dem, bands, valid_mask, cell_size_m)"),
-    StageSpec("perception", "Disha", "odyssey.perception", "compute_hazards", stubs.stub_compute_hazards,
+    StageSpec("perception", "Disha", "odyssey.perception", "compute_hazards",
               "compute_hazards(terrain, config) -> (TerrainGrid full, HazardMap with slope_std_deg None)"),
     StageSpec("uncertainty", "Disha", "odyssey.uncertainty", "fill_slope_uncertainty",
-              stubs.stub_fill_slope_uncertainty,
               "fill_slope_uncertainty(terrain, hazards, config) -> HazardMap with slope_std_deg filled"),
-    StageSpec("cost_map", "Udit", "odyssey.planning", "build_cost_map", None,
+    StageSpec("cost_map", "Udit", "odyssey.planning", "build_cost_map",
               "build_cost_map(terrain, hazards, config) -> CostMap"),
     StageSpec("science_candidates", "Saptarshi", "odyssey.science", "find_candidates",
-              stubs.stub_find_candidates,
               "find_candidates(terrain, hazards, config) -> list[Candidate], value only"),
-    StageSpec("planning", "Udit", "odyssey.planning", "plan_paths", None,
+    StageSpec("planning", "Udit", "odyssey.planning", "plan_paths",
               "plan_paths(terrain, hazards, cost_map, candidates, config) -> {candidate_id: {mode: PathResult}}"),
-    StageSpec("science_ranking", "Saptarshi", "odyssey.science", "rank_targets", stubs.stub_rank_targets,
+    StageSpec("science_ranking", "Saptarshi", "odyssey.science", "rank_targets",
               "rank_targets(candidates, paths, terrain, hazards, config) -> list[ScienceTarget]"),
-    StageSpec("planning_extras", "Udit", "odyssey.planning", "plan_extras", None,
+    StageSpec("planning_extras", "Udit", "odyssey.planning", "plan_extras",
               "plan_extras(terrain, hazards, cost_map, goal, config) -> PlanExtras"),
 ]}
 
 
-def resolve_stage(spec: StageSpec) -> tuple[Callable[..., Any], bool]:
-    """Return (function, is_stub). Falls back to the stub only if the function is missing.
-
-    An ImportError raised inside the other role's module is a real bug and is NOT hidden.
-    """
-    if spec.stub is None:
-        return getattr(importlib.import_module(spec.module), spec.func), False
-    try:
-        mod = importlib.import_module(spec.module)
-    except ModuleNotFoundError as e:
-        if e.name != spec.module:
-            raise
-        return spec.stub, True
-    fn = getattr(mod, spec.func, None)
-    return (fn, False) if fn is not None else (spec.stub, True)
+def resolve_stage(spec: StageSpec) -> Callable[..., Any]:
+    """Find the stage function by module and name. A missing module or function raises, and
+    `run_pipeline` records that as a failure of the stage. Nothing is hidden or replaced."""
+    return getattr(importlib.import_module(spec.module), spec.func)
 
 
 class _Stop(Exception):
@@ -93,15 +79,9 @@ def run_pipeline(config: Optional[PipelineConfig] = None,
     res = C.PipelineResult(config=config, start=tuple(config.start))
 
     def call(name: str, *args: Any) -> Any:
-        spec = STAGES[name]
-        if name in overrides:
-            fn, is_stub = overrides[name], False
-        else:
-            fn, is_stub = resolve_stage(spec)
-        if is_stub:
-            res.stub_stages.append(name)
         t0 = time.perf_counter()
         try:
+            fn = overrides[name] if name in overrides else resolve_stage(STAGES[name])
             return fn(*args, config)
         except Exception as e:  # recorded, then the run stops
             res.error = C.StageFailure(name, f"{type(e).__name__}: {e}")
@@ -178,8 +158,6 @@ def run_pipeline(config: Optional[PipelineConfig] = None,
         unreachable = [c for c, m in res.paths.items() if not m["cautious"].safe]
         if unreachable:
             res.notes.append(f"No safe path (cautious mode) to: {', '.join(sorted(unreachable))}")
-        if res.stub_stages:
-            res.notes.append("Stub stages in this run: " + ", ".join(res.stub_stages))
     except _Stop:
         pass
     return res
@@ -242,7 +220,7 @@ def summary(res: C.PipelineResult) -> str:
     if res.error:
         lines.append(f"FAILED at stage '{res.error.stage}': {res.error.reason}")
     for n, t in res.timings_s.items():
-        lines.append(f"  {n:20s} {t:7.2f}s" + ("  (stub)" if n in res.stub_stages else ""))
+        lines.append(f"  {n:20s} {t:7.2f}s")
     for t in res.targets:
         lines.append(f"  {t.id} {t.kind:8s} score {t.score:.3f} rank {t.rank_interval} cost {t.path_cost:.1f}")
     lines.append(f"default target: {res.default_target_id}")

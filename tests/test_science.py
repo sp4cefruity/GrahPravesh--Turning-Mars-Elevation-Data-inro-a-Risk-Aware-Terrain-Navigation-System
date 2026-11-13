@@ -1,6 +1,6 @@
 """Acceptance checks from specs/03-uncertainty-science.md.
 
-Only contracts and stubs are used as inputs. Path costs are fabricated here, so the checks run
+Only contracts and a synthetic test scene are used as inputs. Path costs are fabricated here, so the checks run
 before the real planner is wired in.
 """
 
@@ -10,19 +10,22 @@ import numpy as np
 import pytest
 from scipy.ndimage import distance_transform_edt
 
-from odyssey import pipeline, stubs
+from odyssey import pipeline
 from odyssey.config import PipelineConfig, Seeds
 from odyssey.contracts import (
     Candidate, PathResult, validate_candidates, validate_targets,
 )
+from odyssey.perception import compute_hazards
 from odyssey.science import find_candidates, rank_targets
+from odyssey.uncertainty import fill_slope_uncertainty
+from synthetic import synthetic_terrain
 
 
 def _scene(**cfg_kw):
     cfg = dataclasses.replace(PipelineConfig(), **cfg_kw)
-    terrain = stubs.stub_load_terrain(cfg)
-    terrain, hazards = stubs.stub_compute_hazards(terrain, cfg)
-    hazards = stubs.stub_fill_slope_uncertainty(terrain, hazards, cfg)
+    terrain = synthetic_terrain(cfg)
+    terrain, hazards = compute_hazards(terrain, cfg)
+    hazards = fill_slope_uncertainty(terrain, hazards, cfg)
     return cfg, terrain, hazards
 
 
@@ -70,7 +73,7 @@ def test_missing_region_is_listed_with_low_confidence_not_dropped():
     cfg, terrain, hazards = _scene()
     cands = find_candidates(terrain, hazards, cfg)
     missing = [c for c in cands if not terrain.valid_mask[c.location]]
-    assert missing, "the stub scene has a missing patch, a target must be listed there"
+    assert missing, "the synthetic scene has a missing patch, a target must be listed there"
     normal = [c for c in cands if terrain.valid_mask[c.location]]
     w_missing = min(c.value_ci[1] - c.value_ci[0] for c in missing)
     w_normal = max(c.value_ci[1] - c.value_ci[0] for c in normal)
@@ -114,7 +117,7 @@ def test_candidates_are_repeatable():
 # ---------------------------------------------------------------- step 2
 
 
-def test_ranking_works_with_a_stub_path_cost_and_every_target_has_evidence():
+def test_ranking_works_with_fabricated_path_costs_and_every_target_has_evidence():
     cands = [_cand(1, 0.9, 0.05), _cand(2, 0.6, 0.05, "geology"), _cand(3, 0.5, 0.05)]
     cfg, terrain, hazards = _scene()
     targets = rank_targets(cands, _paths(cands, [10.0, 12.0, np.inf]), terrain, hazards, cfg)
@@ -191,7 +194,6 @@ def test_conflict_and_missing_flags_reach_the_target_evidence():
 def test_real_science_stages_run_in_the_pipeline_and_repeat():
     res = pipeline.run_pipeline(PipelineConfig())
     assert res.complete, res.error
-    assert "science_candidates" not in res.stub_stages and "science_ranking" not in res.stub_stages
     assert res.targets and all(t.evidence.strip() for t in res.targets)
     res2 = pipeline.run_pipeline(PipelineConfig())
     assert [(t.id, t.score, t.rank_interval) for t in res.targets] == \

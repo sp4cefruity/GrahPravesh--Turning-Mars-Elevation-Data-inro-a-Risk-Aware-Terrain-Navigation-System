@@ -32,7 +32,7 @@ In: `TerrainGrid` (simulated bands, `valid_mask`), complete `HazardMap`, and lat
 - [ ] Rank order can change when uncertainty is high, and the UI shows overlapping bands
 - [ ] Every target has a non-empty evidence string
 - [ ] Same seed gives the same ranking
-- [ ] Works with a stub path cost, before the real planner lands
+- [ ] Works with fabricated path costs, so it can be tested without the planner
 
 ## Uncertainty and failure handling
 

@@ -30,14 +30,14 @@ In: one config file (seeds, weights, thresholds, noise level). Out: one serialis
 5. The demo scene includes noise, missing patches and at least one conflicting sensor reading.
 6. A path safety check confirms the final path never crosses a blocked cell.
 7. The result is serialised once per config so the dashboard loads it without recomputing.
-8. Until a stage lands, `pipeline.py` uses a stub that returns dummy output in the contract shape, so the pipeline always runs end to end.
+8. Each stage is looked up by module and function name when it runs. A missing stage stops the run with a failure that names it.
 9. The repo runs from a clean checkout using the README steps.
 
 ## Acceptance checks
 
 - [ ] Two runs with the same seed give identical output
 - [ ] Safety check fails loudly if a path crosses a blocked cell (tested with a forced bad path)
-- [ ] Pipeline runs end to end with all stubs, before any real stage exists
+- [ ] Pipeline runs end to end with every stage real
 - [ ] Clean-clone run works on a second laptop
 - [ ] All three Track A showcase items appear in the dashboard
 

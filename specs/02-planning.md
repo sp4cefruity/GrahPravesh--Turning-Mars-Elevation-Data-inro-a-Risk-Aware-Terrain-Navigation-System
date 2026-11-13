@@ -34,7 +34,7 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
     - The start and each candidate map to their block. Their blocks are opened on the coarse grid, because the real cells are checked at full resolution.
     - The drift margin keeps its size in metres: `inflate_r0 / f` on the coarse grid, same `inflate_growth`. At full resolution the refinement uses the exact margin from requirement 5.
     - The coarse route is refined with A* at full resolution inside the blocks it crosses (then those blocks grown by one block). Returned cells are full resolution, start and goal are the exact cells. If refinement fails the result is "no safe path" with a reason.
-    - `total_cost` is the full resolution CVaR cost of the refined path. It is near optimal, not guaranteed optimal (on the stub scene 512 input it was within about 1.5 percent of full resolution A*). The Dijkstra check runs on the coarse search and on the refinement.
+    - `total_cost` is the full resolution CVaR cost of the refined path. It is near optimal, not guaranteed optimal (on a 512 by 512 synthetic test scene it was within about 1.5 percent of full resolution A*). The Dijkstra check runs on the coarse search and on the refinement.
     - A blocked block can hide an open cell, so a goal reachable only through a one cell gap can come back as "no safe path". This is conservative.
     - The final safety check in the pipeline always uses the true full resolution blocked mask. The pipeline adds a note when the coarse grid was used.
 12. Metric definitions (used by the risk curve, `PathResult` and the dashboard):

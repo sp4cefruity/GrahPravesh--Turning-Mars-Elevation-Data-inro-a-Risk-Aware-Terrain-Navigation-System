@@ -17,7 +17,7 @@ These rules apply to every AI agent working in this repo, whatever the tool or r
 - Interfaces between modules live in `docs/ARCHITECTURE.md` (section "Contracts"). Do not change a contract without telling the owners on both sides.
 - Every module must expose its uncertainty, not hide it. The judges score this directly (see `docs/EVALUATION_MAP.md`).
 - Every output shown in the dashboard must be traceable to inputs. Keep an evidence string or source reference with each result.
-- Small commits, one concern each, after approval. Branch names: `role/short-topic` (for example `perception/slope-map`).
+- Small commits, one concern each, after approval. Work on main. Make a branch only when the user says there is a real need for one.
 - All code must be written during the hackathon window (12:00 AM to 12:00 PM on Nov 14, 2026). Open-source libraries and public data are fine. Note every external dataset and library in the README.
 
 ## Definition of done for any task

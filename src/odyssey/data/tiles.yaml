@@ -1,0 +1,42 @@
+# Source products and tiles for spec 05.
+# Product A values were read from the PDS3 label on 2026-11-14. Check each one again before trusting it.
+# To add a product, read its .IMG label once (first 16 KB) and copy the same fields.
+
+products:
+  A:
+    id: DTEEC_023524_1985_023379_1985_U01
+    site: Jezero crater, 18.16 to 18.52 N
+    url: https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_023500_023599/ESP_023524_1985_ESP_023379_1985/DTEEC_023524_1985_023379_1985_U01.IMG
+    lines: 21258
+    samples: 8235
+    record_bytes: 32940        # one row: 8235 samples x 4 bytes (float32, little endian)
+    data_offset: 32940         # ^IMAGE = 2, so data starts after the one label record
+    missing_bits: 0xFF7FFFFB   # float32 bit pattern for no data (MISSING_CONSTANT)
+    valid_range_m: [-2694.83, -2510.19]  # VALID_MINIMUM and VALID_MAXIMUM from the label, used as a sanity check
+    cell_size_m: 1.0096633     # MAP_SCALE, equirectangular, true at the centre latitude
+    sigma_z_m: 0.3             # assumption from "tens of centimetres" (HiRISE DTM page), not measured here
+    licence: unverified        # NASA PDS product. Confirm before committing crops.
+  B:
+    id: DTEEC_021466_1230_021954_1230_A01
+    site: Promethei Terra ice-exposing scarp area, 56.58 to 56.71 S (not confirmed to be the exact Dundas 2018 product)
+    url: https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_021400_021499/ESP_021466_1230_ESP_021954_1230/DTEEC_021466_1230_021954_1230_A01.IMG
+    lines: 8223
+    samples: 6053
+    record_bytes: 24212        # 6053 samples x 4 bytes
+    data_offset: 24212         # ^IMAGE = 2
+    missing_bits: 0xFF7FFFFB
+    valid_range_m: [2183.20, 3155.82]
+    cell_size_m: 0.99541348    # MAP_SCALE. Product A is 1.0097, about 1.4% different, left as is
+    sigma_z_m: 0.3             # same assumption as A
+    licence: unverified        # NASA PDS product. Confirm before committing crops.
+
+# window: [row, col] of the top left pixel of a 512 x 512 crop. null until scouted.
+tiles:
+  # Windows chosen from a 64 px scout of product A (14 x 5 grid) on 2026-11-14. Scout patches nearby:
+  # T1 slope p50 8.5 deg relief 5.9 m, T2 slope p50 3.5 deg relief 2.8 m, T3 slope p50 21.9 deg relief 18.7 m.
+  T1: {product: A, window: [7700, 3600], role: demo, note: "tune here only"}
+  T2: {product: A, window: [10900, 5500], role: held out, note: "same site, flatter texture"}
+  T3: {product: A, window: [4600, 5500], role: stress, note: "steepest patch the scout found"}
+  # Product B scout (12 x 5 grid): T4 patch slope p50 45.5 deg relief 59 m (a cliff), T5 patch p50 15.1 deg relief 17 m.
+  T4: {product: B, window: [2600, 1250], role: held out new site, note: "cliff or scarp, the real stress terrain"}
+  T5: {product: B, window: [5400, 2500], role: optional, note: "moderately steep slopes, new site"}

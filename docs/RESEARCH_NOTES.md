@@ -27,3 +27,22 @@ What we learned: Full survey and design plan in `docs/MODEL_AND_BASELINE_PLAN.md
 Why it matters for the build: Gives cited candidates for hazard thresholds, cost weights and the uncertainty approach. Its 5-week timeline does not fit the hackathon; use `docs/TIMELINE.md`.
 Specs affected: 01-perception, 02-planning, 03-uncertainty-science (reconciled into the specs and `docs/ARCHITECTURE.md`).
 Status: accepted (Udit, after talking with Disha)
+
+### DEM noise model for the Monte Carlo (2026-11-14, Disha)
+What we learned: HiRISE DTMs are documented with vertical precision of "tens of centimeters" and artifacts such as boxes and faceting (source S9 in `docs/MODEL_AND_BASELINE_PLAN.md`, tagged F there, not re-checked by us). `docs/MODEL_AND_BASELINE_PLAN.md` section 5 also says DEM errors are spatially correlated, with a correlation length of about 10 to 50 m, and that independent per-pixel noise overstates slope noise.
+Model implemented in `src/odyssey/uncertainty/montecarlo.py`: each draw adds a Gaussian random field to the DEM (white noise, Gaussian filter, rescaled to std `sigma_z`). `sigma_z = noise_level * 0.3 m` and the correlation length is 20 m. Both 0.3 m and 20 m are ASSUMPTIONS picked inside the quoted ranges, not fitted. 50 draws by default (`n_dem_draws`), seeded by `seeds.uncertainty`. Only the running mean and std are kept. The noise is the same over the whole tile, so it does not model local artifact masks. The real DTM error is unverified for our tile.
+Why it matters for the build: gives `slope_std_deg`, which feeds `cost_std` in the planner. `noise_level` is the single dial the dashboard changes.
+Specs affected: 01-perception.
+Status: accepted for the demo, labelled assumption.
+
+### Perception thresholds, status (2026-11-14, Disha)
+What we learned: no published rover slope limit was verified (`docs/MODEL_AND_BASELINE_PLAN.md` says so). Nothing below is cited. All values live in `src/odyssey/perception/params.py` or `PipelineConfig`.
+- Hard block slope 25 deg and `hazard_delta` 0.9: working values from `docs/ARCHITECTURE.md`, assumptions.
+- P_slope is a normal CDF centred at 20 deg with a 3 deg spread. Assumption, chosen between the 15 deg soft scale and the 25 deg limit.
+- P_rough is a normal CDF centred at 0.25 m roughness (plane-fit residual std, 3 by 3 window) with a 0.10 m spread. Assumption. The idea is that a bump near half a wheel diameter matters, but the wheel size is unverified.
+- Crater rim rule: convexity above 0.05 per m with slope above 10 deg within two cells. Assumption, tuned only on a synthetic ring.
+- Terrain classes come from the rules above (pseudo-labels), so the Random Forest agrees with the rules by construction. It shows how stable the rule boundaries are and gives vote spread as `epistemic_std`. It is not an independent check.
+- Cells next to a missing patch use heights copied from the nearest valid cell inside the kernels, so their slope is less reliable. They are not flagged separately yet.
+Why it matters for the build: judges can see which numbers are assumptions. A sensitivity sweep (hard limit 10, 15, 20, 25) is still to do.
+Specs affected: 01-perception (open question on cited thresholds stays open).
+Status: proposed, citations still needed.

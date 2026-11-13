@@ -47,3 +47,9 @@ Real multispectral products, atmospheric correction, a CNN on the orbital tile.
 - Tile choice is owned by Saptarshi in `specs/05-data.md`. Disha confirms it as soon as it is picked.
 - Cited slope and roughness thresholds, pending research notes.
 - DECIDED (dev): option (b). `HazardMap.evidence_code` is an (H, W) int array and `evidence` is the legend `dict[int, str]` from code to note. Every code in the array must have a legend entry (the pipeline checks this). Disha to confirm.
+- Implemented (not yet reviewed by a teammate): `compute_hazards` in `src/odyssey/perception/` and `fill_slope_uncertainty` in `src/odyssey/uncertainty/`. Evidence legend decision (option b) is implemented as written.
+- Request to Udit (config and pipeline owner): add `perception: PerceptionParams` to `PipelineConfig` (class in `odyssey.perception.params`) so the sweep can change thresholds. Until then the code reads `getattr(config, "perception", None)` and uses defaults.
+- Request to Udit: add `scikit-learn` and `pytest` to `requirements.txt`. Perception imports `sklearn`.
+- Request to Udit: `tests/test_pipeline.py::test_runs_end_to_end_with_all_stubs` expects the perception and uncertainty stages to be stubs. They are real now, so that expected set needs updating.
+- Request to Udit: the README should say terrain classes use rule-derived pseudo-labels (spec requirement 3).
+- Derived layers (`slope_deg`, `roughness`, `aspect`) and `slope_std_deg` are NaN where `valid_mask` is False. `hazard_prob` is 1.0 there, `hard_block` is False, `terrain_class` is -1. Planning already uses `nan_to_num`. Tell Udit and Saptarshi if that is a problem.

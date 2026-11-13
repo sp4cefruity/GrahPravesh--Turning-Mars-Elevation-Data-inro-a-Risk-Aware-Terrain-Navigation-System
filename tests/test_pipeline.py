@@ -11,10 +11,10 @@ from odyssey.config import PipelineConfig, Seeds
 from odyssey.contracts import MODES, PathResult
 
 
-def test_runs_end_to_end_with_all_stubs():
+def test_runs_end_to_end_with_only_data_stubbed():
     res = pipeline.run_pipeline(PipelineConfig())
     assert res.complete, res.error
-    assert set(res.stub_stages) == {"data", "perception", "uncertainty", "science_candidates", "science_ranking"}
+    assert set(res.stub_stages) == {"data"}
     assert res.default_target_id is not None
     assert res.targets and res.risk_curve and set(res.baseline_paths) == {"b0", "b1"}
     for by_mode in res.paths.values():

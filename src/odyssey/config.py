@@ -54,10 +54,17 @@ class PlanningConfig:
     b1_z_offset_m: float = 1.0  # z = dem - min(dem) + offset, so cost stays positive (assumption)
 
 
+def _perception_params(**kw):
+    # Imported lazily: perception imports this module, so a top level import would be circular.
+    from .perception.params import PerceptionParams
+    return PerceptionParams(**kw)
+
+
 @dataclass(frozen=True)
 class PipelineConfig:
     seeds: Seeds = field(default_factory=Seeds)
     planning: PlanningConfig = field(default_factory=PlanningConfig)
+    perception: Any = field(default_factory=_perception_params)  # a PerceptionParams
     start: tuple[int, int] = (8, 8)  # rover landing cell (row, col)
     noise_level: float = 1.0  # one dial, read by data and uncertainty
     hard_block_slope_deg: float = 25.0  # read by perception (assumption)
@@ -97,9 +104,10 @@ class PipelineConfig:
             if key in planning_d:
                 planning_d[key] = tuple(planning_d[key])
         planning = PlanningConfig(**planning_d)
+        perception = _perception_params(**d.pop("perception", {}))
         if "start" in d:
             d["start"] = tuple(d["start"])
-        return cls(seeds=seeds, planning=planning, **d)
+        return cls(seeds=seeds, planning=planning, perception=perception, **d)
 
     @classmethod
     def from_json(cls, path: str | Path) -> "PipelineConfig":

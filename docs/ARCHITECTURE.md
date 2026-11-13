@@ -19,20 +19,27 @@ Uncertainty is carried end to end. Perception gives probabilities. Those become 
  [perception] Horn slope, roughness, step height, aspect
             |  terrain classes: rules plus Random Forest (tree-vote variance = epistemic std)
             |  P_haz = 1 - (1 - P_slope)(1 - P_rough)(1 - P_class)
-            v                                                          HazardMap
- [uncertainty] DEM Monte Carlo (spatially correlated noise, 50 to 100 draws)
-            |  -> slope_std_deg, cost_mean, cost_std
-            |  hard_block = slope > limit OR P_haz > delta  (kept apart from soft weights)
+            |  hard_block = slope > limit OR crater rim OR P_haz > delta  (Disha)
+            v                                                          HazardMap (no slope_std yet)
+ [uncertainty] DEM Monte Carlo (spatially correlated noise, 50 to 100 draws)   (Disha)
+            |  calls the perception slope kernel, stores mean and std only
+            v                                                          HazardMap.slope_std_deg filled
+ [planning]  cost map: cost_mean and cost_std built from slope, roughness, P_haz,
+            |  slope_std_deg and epistemic_std (first order propagation)   (Udit)
+            |  hard blocks stay separate from soft weights
             v                                                          CostMap
+ [science 1] candidates from simulated ice and mineral bands plus geomorphic cues,
+            |  value with feature noise (no path cost yet)             (Saptarshi)
+            v                                                          candidate list
  [planning]  edge cost = mean + std * phi(z_alpha) / (1 - alpha)   (Gaussian CVaR)
             |  8-connected A* (numba), Dijkstra cross-check
             |  distance-growing inflation of blocked cells (IROS 2022 drift margin)
+            |  one path per candidate, bold and cautious
             |  corridor = cells where D_start + D_goal <= (1 + tau) * best cost
             |  safety verifier on true hazards, risk-vs-length curve over alpha
-            v                                                          PathResult
- [science]   candidates from simulated ice and mineral bands plus geomorphic cues
-            |  value with feature noise, access cost = path CVaR
-            |  Monte Carlo ranking (1000 draws): rank interval, P(top 3), evidence string
+            v                                                          PathResult per candidate
+ [science 2] access cost = path CVaR, then Monte Carlo ranking (1000 draws):
+            |  rank interval, P(top 3), evidence string
             v                                                          ScienceTarget[]
  [dashboard] Streamlit and Plotly: cost map, std map, paths, corridor, targets with
              error bars, bold or cautious dial, noise slider, click-to-trace
@@ -43,16 +50,18 @@ Uncertainty is carried end to end. Perception gives probabilities. Those become 
 
 `pipeline.py` runs the stages in order and returns one `PipelineResult`. Run it once per config and serialise the result, so the demo loads instantly and cannot fail live.
 
-One placement note: the plan's diagram showed the DEM Monte Carlo inside perception. It lives in the `uncertainty` module (Saptarshi) and calls Disha's slope kernel. That keeps ownership clean and matches the contract additions below.
+Pipeline order, fixed (science needs path costs, and the planner needs goals, so science runs in two steps): data, perception, uncertainty, cost map, science candidates, planning (one path per candidate), science ranking. The path shown by default goes to the top ranked target. The dashboard can show any precomputed candidate path.
+
+Ownership changes (decided by Udit on Nov 14): the DEM Monte Carlo lives in the `uncertainty` module and is now owned by Disha, because it wraps her slope kernel. Saptarshi owns data and science (including the 1000 draw ranking Monte Carlo). Udit builds the cost map (`cost_mean`, `cost_std`) from Disha's fields. Disha computes `hard_block`.
 
 ## Modules and owners
 
 | Module | Folder | Owner | Job |
 |---|---|---|---|
 | data | `src/odyssey/data/` | Saptarshi | Load the DEM tile, simulated bands, ice signal, noise, gaps, seeds, cache, synthetic DEM fallback |
-| perception | `src/odyssey/perception/` | Disha | Horn slope, roughness, step, aspect, rules, Random Forest classes, hazard probability |
-| uncertainty | `src/odyssey/uncertainty/` | Saptarshi | DEM Monte Carlo, cost mean and std, slope std |
-| planning | `src/odyssey/planning/` | Udit | Cost map, CVaR edge cost, A*, Dijkstra, inflation, corridor, baselines B0 and B1, safety verifier, risk curve |
+| perception | `src/odyssey/perception/` | Disha | Horn slope, roughness, step, aspect, rules, Random Forest classes, hazard probability, hard block |
+| uncertainty | `src/odyssey/uncertainty/` | Disha | DEM Monte Carlo, `slope_std_deg` |
+| planning | `src/odyssey/planning/` | Udit | Cost map (`cost_mean`, `cost_std`), CVaR edge cost, A*, Dijkstra, inflation, corridor, baselines B0 and B1, safety verifier, risk curve |
 | science | `src/odyssey/science/` | Saptarshi | Candidates, value, ranking Monte Carlo, evidence strings |
 | dashboard | `src/odyssey/dashboard/` | Disha | Interactive UI |
 | pipeline | `src/odyssey/pipeline.py` | Udit | Orchestration, config, seeds, serialisation |
@@ -62,8 +71,8 @@ One placement note: the plan's diagram showed the DEM Monte Carlo inside percept
 All grids are NumPy arrays of shape (H, W), same orientation, same cell size in meters.
 
 - `TerrainGrid`: `dem`, `slope_deg`, `roughness`, `aspect`, `bands` (dict of simulated spectral arrays), `valid_mask` (False where data is missing), `cell_size_m`, `simulated_layers` (names of simulated layers)
-- `HazardMap` (Disha, with Saptarshi for `slope_std_deg`): `hazard_prob` (0 to 1), `terrain_class` (int labels), `class_probs` (K, H, W), `epistemic_std`, `slope_std_deg`, `hard_block` (bool, steep or crater rim), `evidence` (per-class rule or model note)
-- `CostMap` (Udit): `cost_mean`, `cost_std`, `p_haz`, `blocked` (bool)
+- `HazardMap` (Disha, all fields including `slope_std_deg` and `hard_block`): `hazard_prob` (0 to 1), `terrain_class` (int labels), `class_probs` (K, H, W), `epistemic_std`, `slope_std_deg`, `hard_block` (bool, steep or crater rim), `evidence` (per-class rule or model note)
+- `CostMap` (Udit): `cost_mean`, `cost_std`, `p_haz`, `blocked` (bool). `blocked` = `HazardMap.hard_block` OR `~valid_mask`, then inflated by the planner.
 - `PathResult` (Udit): `cells` (list of (row, col)), `total_cost`, `risk_score`, `max_slope_on_path`, `safe` (bool from verification), `planner` ("astar" or "dijkstra"), `mode` ("bold" or "cautious"), `alpha`, `corridor_mask` (bool), `min_feasible_risk` (used when no safe path exists), `baseline` ("b0", "b1" or None)
 - `ScienceTarget` (Saptarshi): `id`, `location`, `value_mean`, `value_ci` (low, high), `path_cost`, `score`, `score_ci`, `rank_interval` (low, high), `p_top3`, `evidence` (string), `kind` ("ice" or "geology")
 - `PipelineResult` (Udit): all of the above plus `risk_curve` (list of alpha, path_length, hazard_violation_rate), `baseline_paths`, and `config` (seeds, weights, thresholds) so a run can be reproduced

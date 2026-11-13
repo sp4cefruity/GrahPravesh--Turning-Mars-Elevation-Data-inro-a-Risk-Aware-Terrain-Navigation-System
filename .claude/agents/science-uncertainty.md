@@ -1,13 +1,13 @@
 ---
 name: science-uncertainty
-description: Uncertainty and science ranking agent for Saptarshi. Works on Monte Carlo, confidence bands, target detection and ranking, evidence strings. Use for anything in src/odyssey/uncertainty or src/odyssey/science.
+description: Uncertainty and science ranking agent for Saptarshi. Works on target detection, ranking Monte Carlo, confidence bands and evidence strings. Use for anything in src/odyssey/science.
 ---
 
 You work for Saptarshi on the Odyssey Track A project.
 
 Read first: `AGENTS.md`, `CONTEXT.md`, `docs/RESEARCH_NOTES.md`, `specs/03-uncertainty-science.md`, and the Contracts section of `docs/ARCHITECTURE.md`.
 
-You own: `src/odyssey/uncertainty/`, `src/odyssey/science/`, `specs/03-uncertainty-science.md`.
+You own: `src/odyssey/science/`, `specs/03-uncertainty-science.md`.
 You do not edit other roles' files. Put requests in the owner's spec under Open questions.
 
 Priorities:

@@ -1,6 +1,6 @@
 # Spec 05: Data
 
-Status: draft
+Status: approved
 Owner: Saptarshi
 Reviewer: Disha
 Serves criteria: uncertainty, technical depth, explainability
@@ -38,5 +38,6 @@ Real CRISM or other multispectral products.
 
 ## Open questions
 
-- Which tile? Saptarshi to confirm with Disha by 1:00 AM.
-- Simulation model for the ice signal, pending Disha's research.
+- Which tile? Saptarshi confirms with Disha now. If the download is not usable within about 30 minutes, switch to the seeded synthetic DEM so nobody is blocked. Say so in the output either way.
+- Ice signal model: Saptarshi picks a simple documented one (for example a blob field plus noise). Disha's research may refine it later.
+- Publish a synthetic DEM and a small sample `TerrainGrid` first, so perception and the dashboard can build against it right away.

@@ -1,6 +1,6 @@
 # Spec 04: Dashboard
 
-Status: draft
+Status: approved
 Owner: Disha
 Reviewer: Udit
 Serves criteria: usability, explainability, uncertainty
@@ -13,11 +13,12 @@ One screen that tells the whole story in the 8 minute demo.
 
 1. 3D terrain view and a 2D cost map with the path overlaid (Streamlit with Plotly is the working choice).
 2. Ranked science targets table with confidence bands.
-3. Controls: noise level, missing data toggle, bold versus cautious mode, planner choice (A* or Dijkstra).
+3. Controls: noise level, missing data toggle, bold versus cautious mode, planner choice (A* or Dijkstra). A target picker switches among the precomputed candidate paths. The default is the top ranked target.
 4. Click or select a target or path segment to see its trace: inputs, cost breakdown, evidence string.
 5. Visible safety badge from the path safety check.
 6. Simulated layers are labelled as simulated on screen.
-7. Loads quickly. Heavy results are precomputed or cached.
+7. Loads quickly. It reads one serialised `PipelineResult` and does not recompute on load.
+8. Cut order if late: 3D view first (keep 2D), then Dijkstra view, B1 view.
 
 ## Acceptance checks
 

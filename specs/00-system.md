@@ -1,6 +1,6 @@
 # Spec 00: System
 
-Status: draft
+Status: approved
 Owner: Udit
 Reviewer: Saptarshi
 Serves criteria: all
@@ -9,20 +9,39 @@ Serves criteria: all
 
 One command runs the full pipeline on the demo scene and the dashboard shows the result: a cost map, a safe path, and ranked science targets with uncertainty.
 
+## Inputs and outputs
+
+In: one config file (seeds, weights, thresholds, noise level). Out: one serialised `PipelineResult` (see `docs/ARCHITECTURE.md`).
+
 ## Requirements
 
-1. `pipeline.py` runs data, perception, uncertainty, planning and science in order and returns a `PipelineResult`.
-2. Runs are reproducible from a config with fixed seeds.
-3. The demo scene includes noise, missing patches and at least one conflicting sensor reading.
-4. A path safety check confirms the final path never crosses a hard-blocked cell.
-5. The repo runs from a clean checkout using the README steps.
+1. `pipeline.py` runs the stages in this fixed order and returns a `PipelineResult`:
+   1. data (Saptarshi)
+   2. perception, including `hard_block` (Disha)
+   3. uncertainty, the DEM Monte Carlo that fills `slope_std_deg` (Disha)
+   4. cost map (Udit)
+   5. science candidates, value only, no path cost yet (Saptarshi)
+   6. planning, one path per candidate in bold and cautious mode (Udit)
+   7. science ranking, using path CVaR as access cost (Saptarshi)
+2. The default displayed path goes to the top ranked target. The dashboard can show any precomputed candidate path.
+3. Runs are reproducible from a config with fixed seeds.
+4. The demo scene includes noise, missing patches and at least one conflicting sensor reading.
+5. A path safety check confirms the final path never crosses a blocked cell.
+6. The result is serialised once per config so the dashboard loads it without recomputing.
+7. Until a stage lands, `pipeline.py` uses a stub that returns dummy output in the contract shape, so the pipeline always runs end to end.
+8. The repo runs from a clean checkout using the README steps.
 
 ## Acceptance checks
 
 - [ ] Two runs with the same seed give identical output
 - [ ] Safety check fails loudly if a path crosses a blocked cell (tested with a forced bad path)
+- [ ] Pipeline runs end to end with all stubs, before any real stage exists
 - [ ] Clean-clone run works on a second laptop
-- [ ] All five items in the Track A showcase list appear in the dashboard
+- [ ] All three Track A showcase items appear in the dashboard
+
+## Uncertainty and failure handling
+
+If a stage raises, the pipeline records the stage name and reason in the result and stops. The dashboard shows that reason. It never shows partial output as if it were complete.
 
 ## Out of scope
 
@@ -30,4 +49,4 @@ Wheel slip, power budget, multi-rover, real-time sensor streaming.
 
 ## Open questions
 
-- Flow may change after Disha's research. Re-check this spec when `docs/RESEARCH_NOTES.md` gets entries.
+- None blocking. Re-check this spec if `docs/RESEARCH_NOTES.md` changes a requirement.

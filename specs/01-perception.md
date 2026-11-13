@@ -1,36 +1,38 @@
-# Spec 01: Perception
+# Spec 01: Perception and DEM Monte Carlo
 
-Status: draft
+Status: approved
 Owner: Disha
 Reviewer: Udit
 Serves criteria: technical depth, uncertainty, explainability
 
 ## Purpose
 
-Turn the raw scene from `specs/05-data.md` into slope, roughness, terrain classes and a hazard map.
+Turn the raw scene from `specs/05-data.md` into slope, roughness, terrain classes, a hazard map with hard blocks, and a per-cell slope uncertainty from a DEM Monte Carlo.
 
 ## Inputs and outputs
 
 In: raw `TerrainGrid` from the data module (DEM, simulated bands, valid mask).
-Out: full `TerrainGrid` and `HazardMap` (see `docs/ARCHITECTURE.md`).
+Out: full `TerrainGrid` and a complete `HazardMap`, including `hard_block` and `slope_std_deg` (see `docs/ARCHITECTURE.md`).
 
 ## Requirements
 
-1. Derive slope, roughness and aspect from the DEM.
-2. Rule-based hazards first: steep slope, high roughness, crater rim. Thresholds come from cited sources in `docs/RESEARCH_NOTES.md`.
-3. Terrain classes: Random Forest baseline. CNN is an experiment, kept only if it beats the baseline and we can still explain its output.
-4. Every hazard cell carries an evidence note (which rule or model fired).
-5. Use our own numpy Horn kernel for slope (no GPL dependency). Also output step height.
-6. Random Forest tree votes give `class_probs` and `epistemic_std`. Combine into `hazard_prob = 1 - (1 - P_slope)(1 - P_rough)(1 - P_class)`.
-7. Expose the slope kernel so the uncertainty module can call it inside the DEM Monte Carlo.
-8. Side track (optional, dropped at 4:00 AM if not working): write the SegFormer-B0 fine-tune script for the AI4Mars subset. It runs on Saptarshi's GPU.
+1. Derive slope, roughness, step height and aspect from the DEM with our own numpy Horn kernel (no GPL dependency).
+2. Rule-based hazards first: steep slope, high roughness, crater rim. Thresholds come from cited sources in `docs/RESEARCH_NOTES.md`. Until cited, use the working values in `docs/ARCHITECTURE.md` (hard block at 25 degrees) and label them assumptions.
+3. Terrain classes: Random Forest. Tree votes give `class_probs` and `epistemic_std`. Combine into `hazard_prob = 1 - (1 - P_slope)(1 - P_rough)(1 - P_class)`. Labels come from the rules (pseudo-labels), and the README says so.
+4. `hard_block` (bool) is `slope > limit` OR crater rim OR `hazard_prob > delta`. `limit` and `delta` are config values. `delta` is an assumption until tuned. Invalid cells are not handled here, the planner adds `~valid_mask`.
+5. Every hazard cell carries an evidence note (which rule or model fired).
+6. DEM Monte Carlo (module `src/odyssey/uncertainty/`): 50 to 100 draws, spatially correlated noise (Gaussian-filtered white noise), seeded, calling the slope kernel. Store only mean and std. Fill `slope_std_deg`. Document the noise model in `docs/RESEARCH_NOTES.md`.
+7. Noise level is one config value that the dashboard can change.
+8. Side track (optional, dropped at 4:00 AM if not working): write the SegFormer-B0 fine-tune script for the AI4Mars subset. It runs on Saptarshi's GPU. A CNN on the DEM is not planned.
 
 ## Acceptance checks
 
 - [ ] Slope map visually matches the DEM relief
 - [ ] Missing patches show up as `valid_mask = False`, not as zeros
+- [ ] `slope_std_deg` is larger at higher noise (two noise levels checked)
+- [ ] Same seed gives the same `slope_std_deg`
+- [ ] A forced steep patch is marked `hard_block = True`
 - [ ] Hazard map for the demo scene is reviewed by a teammate
-- [ ] CNN versus baseline comparison written down in the research notes (even if CNN is dropped)
 
 ## Uncertainty and failure handling
 
@@ -38,8 +40,9 @@ Missing cells are flagged, never silently filled. Noise level is configurable so
 
 ## Out of scope
 
-Real multispectral products, atmospheric correction.
+Real multispectral products, atmospheric correction, a CNN on the orbital tile.
 
 ## Open questions
 
-- Tile choice is owned by Saptarshi in `specs/05-data.md`. Disha confirms it by 1:00 AM.
+- Tile choice is owned by Saptarshi in `specs/05-data.md`. Disha confirms it as soon as it is picked.
+- Cited slope and roughness thresholds, pending research notes.

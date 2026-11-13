@@ -17,12 +17,12 @@ Only the status line changes between stages. If requirements change after approv
 
 | Spec | Owner | Status |
 |---|---|---|
-| `00-system.md` | Udit | draft |
-| `01-perception.md` | Disha | draft |
-| `02-planning.md` | Udit | draft |
-| `03-uncertainty-science.md` | Saptarshi | draft |
-| `04-dashboard.md` | Disha | draft |
-| `05-data.md` | Saptarshi | draft |
+| `00-system.md` | Udit | approved |
+| `01-perception.md` (includes DEM Monte Carlo) | Disha | approved |
+| `02-planning.md` | Udit | approved |
+| `03-uncertainty-science.md` (science ranking) | Saptarshi | approved |
+| `04-dashboard.md` | Disha | approved |
+| `05-data.md` | Saptarshi | approved |
 
 Use `TEMPLATE.md` for any new spec.
 

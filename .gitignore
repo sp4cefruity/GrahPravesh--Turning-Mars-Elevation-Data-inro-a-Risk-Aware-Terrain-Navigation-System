@@ -9,3 +9,6 @@ data/raw/
 *.tif
 *.zip
 .DS_Store
+
+# pipeline outputs
+outputs/

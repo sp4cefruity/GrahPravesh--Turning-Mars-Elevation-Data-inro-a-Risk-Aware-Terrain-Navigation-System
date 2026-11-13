@@ -23,13 +23,15 @@ In: one config file (seeds, weights, thresholds, noise level). Out: one serialis
    5. science candidates, value only, no path cost yet (Saptarshi)
    6. planning, one path per candidate in bold and cautious mode (Udit)
    7. science ranking, using path CVaR as access cost (Saptarshi)
+   8. planning extras (Udit): baselines B0 and B1 and the risk-versus-length curve, for the default goal. This runs last because the default goal is the top ranked target, which is only known after step 7.
 2. The default displayed path goes to the top ranked target. The dashboard can show any precomputed candidate path.
-3. Runs are reproducible from a config with fixed seeds.
-4. The demo scene includes noise, missing patches and at least one conflicting sensor reading.
-5. A path safety check confirms the final path never crosses a blocked cell.
-6. The result is serialised once per config so the dashboard loads it without recomputing.
-7. Until a stage lands, `pipeline.py` uses a stub that returns dummy output in the contract shape, so the pipeline always runs end to end.
-8. The repo runs from a clean checkout using the README steps.
+3. The start cell is `config.start`, default (8, 8). Every path and every baseline starts there. The run fails at the data stage if it lies outside the grid, and at the cost map stage if it is blocked.
+4. Runs are reproducible from a config with fixed seeds.
+5. The demo scene includes noise, missing patches and at least one conflicting sensor reading.
+6. A path safety check confirms the final path never crosses a blocked cell.
+7. The result is serialised once per config so the dashboard loads it without recomputing.
+8. Until a stage lands, `pipeline.py` uses a stub that returns dummy output in the contract shape, so the pipeline always runs end to end.
+9. The repo runs from a clean checkout using the README steps.
 
 ## Acceptance checks
 

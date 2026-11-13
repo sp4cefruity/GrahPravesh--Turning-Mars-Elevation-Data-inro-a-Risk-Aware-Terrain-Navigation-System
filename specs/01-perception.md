@@ -46,3 +46,4 @@ Real multispectral products, atmospheric correction, a CNN on the orbital tile.
 
 - Tile choice is owned by Saptarshi in `specs/05-data.md`. Disha confirms it as soon as it is picked.
 - Cited slope and roughness thresholds, pending research notes.
+- DECIDED (dev): option (b). `HazardMap.evidence_code` is an (H, W) int array and `evidence` is the legend `dict[int, str]` from code to note. Every code in the array must have a legend entry (the pipeline checks this). Disha to confirm.

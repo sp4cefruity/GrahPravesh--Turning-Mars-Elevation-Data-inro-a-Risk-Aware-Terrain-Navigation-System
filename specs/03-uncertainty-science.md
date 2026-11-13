@@ -17,7 +17,7 @@ In: `TerrainGrid` (simulated bands, `valid_mask`), complete `HazardMap`, and lat
 
 ## Requirements
 
-1. Step 1, candidates: detect candidates (ice signal peaks and geologically distinct features) from the simulated bands and terrain classes. Compute value with feature noise. No path cost yet. Hand the locations to the planner.
+1. Step 1, candidates: detect candidates (ice signal peaks and geologically distinct features) from the simulated bands and terrain classes. Compute value with feature noise. No path cost yet. Hand the locations to the planner as a `list[Candidate]` (`id, location, kind, value_mean, value_ci, evidence`, see `docs/ARCHITECTURE.md`). Skip cells closer to a hard block than the planner's inflation margin, read from `config.drift_margin_cells(shape)`, so no candidate sits where the planner can never reach it.
 2. Step 2, ranking: access cost is the path CVaR from the planner. Score = value divided by access cost.
 3. Ranking Monte Carlo: 1000 draws over feature noise and weights, seeded. Output `value_ci`, `score_ci`, `rank_interval` and `p_top3` per target.
 4. Each target carries a plain-language evidence string: which signals, how reachable, how sure.

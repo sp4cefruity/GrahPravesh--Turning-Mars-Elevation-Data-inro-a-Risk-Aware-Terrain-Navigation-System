@@ -1,0 +1,4 @@
+# Pinned to the versions the pipeline was tested with (Python 3.14).
+# Add a line here whenever a new dependency is first imported.
+numpy==2.5.4
+scipy==1.18.1

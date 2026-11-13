@@ -17,16 +17,31 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
 
 1. Cost map: `cost_mean` is a weighted sum of normalised slope, roughness and `hazard_prob`. `cost_std` comes from first order propagation of `slope_std_deg` and `epistemic_std` through the same weights. Weights live in config and are labelled assumptions.
 2. `blocked` = `hard_block` OR `~valid_mask`. Hard blocks are separate from soft cost. A weight change can never make a blocked cell passable.
-3. A* (8-connected, numba) is the main planner. Dijkstra is the optimality check, compared on cost and nodes expanded.
+3. A* (8-connected) is the main planner. Dijkstra is the optimality check, compared on cost and nodes expanded.
 4. Edge cost is Gaussian CVaR: `mean + std * phi(z_alpha) / (1 - alpha)`. Bold is `alpha = 0`, cautious is `alpha = 0.95`. One dial.
-5. Blocked cells are inflated with a distance-growing margin to model localization drift.
+5. Blocked cells are inflated with a distance-growing margin to model localization drift. The margin is `inflate_r0 + inflate_growth * distance from start`, in cells. `PipelineConfig.drift_margin_cells(shape)` returns its largest value for a grid, so other stages can read it.
 6. Corridor is the set of cells where `D_start + D_goal <= (1 + tau) * best cost`.
 7. Safety check: the final path is verified against the blocked mask on the true (uninflated) hazards. Report max slope and total risk. Fail loudly on a violation.
 8. One path per candidate in bold and cautious mode. Each segment can report its cost breakdown for the dashboard trace.
-9. Baselines B0 (slope threshold plus A*) and B1 (Electronics-paper style cost) run beside the proposed planner for the default goal.
+9. Baselines B0 and B1 run beside the proposed planner for the default goal (pipeline step 8, `planning_extras`).
+   - B0: shortest path with A* where cells steeper than `b0_slope_limit_deg` are blocked.
+   - B1: reference reproduction of Brad and Balog, Electronics 2025, 14(5), 921 (see `docs/MODEL_AND_BASELINE_PLAN.md` sections 2.1 and 8). `cost = z / (friction + eps)` with plain A*, no slope limit, no `hazard_prob`, no uncertainty. `z` is terrain elevation shifted to be positive (`dem - min(dem) + b1_z_offset_m`). Friction comes from `b1_friction_by_class`, indexed by `terrain_class`, in the paper's 0.1 to 0.9 style. Unknown class labels, or a missing class map, use `b1_friction_fallback`. The paper classifies by RGB thresholds and we use our terrain classes, so this reproduces the cost form, not the exact friction map. All values are assumptions.
+   - Baselines may cross true blocked cells. That is reported (`safe` False with a reason), not raised, because it is the comparison.
 10. Risk-versus-length curve over alpha. When no safe path exists, return "no safe path" with the reason and `min_feasible_risk`. Never return a risky path.
-11. Use numba, or plan on a 256 by 256 grid, so sweeps take seconds.
-12. Build order: tiny test grid with A* and Dijkstra, safety check, cost map on dummy hazards, alpha dial, then corridor, inflation, curve, B0 and B1.
+11. Plan on at most `planning_grid_size` (default 256) cells per side, so sweeps take seconds. numba is optional, not required. A grid at or below that size is planned as is. Above it, with block size `f = ceil(max side / planning_grid_size)`:
+    - `res.terrain`, `res.hazards` and `res.cost_map` stay full resolution. Planning builds a coarse copy inside `plan_paths` and `plan_extras` (`planning/coarse.py`). The contracts and stage signatures do not change.
+    - Block reduction: mean for continuous fields and the cost map, any for `hard_block` and `blocked`, all for `valid_mask`, most frequent label for `terrain_class` and `evidence_code`. The coarse cost map is reduced from the full one, not rebuilt, so weights and the roughness scale stay identical.
+    - The start and each candidate map to their block. Their blocks are opened on the coarse grid, because the real cells are checked at full resolution.
+    - The drift margin keeps its size in metres: `inflate_r0 / f` on the coarse grid, same `inflate_growth`. At full resolution the refinement uses the exact margin from requirement 5.
+    - The coarse route is refined with A* at full resolution inside the blocks it crosses (then those blocks grown by one block). Returned cells are full resolution, start and goal are the exact cells. If refinement fails the result is "no safe path" with a reason.
+    - `total_cost` is the full resolution CVaR cost of the refined path. It is near optimal, not guaranteed optimal (on the stub scene 512 input it was within about 1.5 percent of full resolution A*). The Dijkstra check runs on the coarse search and on the refinement.
+    - A blocked block can hide an open cell, so a goal reachable only through a one cell gap can come back as "no safe path". This is conservative.
+    - The final safety check in the pipeline always uses the true full resolution blocked mask. The pipeline adds a note when the coarse grid was used.
+12. Metric definitions (used by the risk curve, `PathResult` and the dashboard):
+    - `risk_score` = sum of `p_haz` over the cells of the path. `inf` when there is no safe path.
+    - `hazard_violation_rate` = share of path cells whose `p_haz` is above `violation_p_haz` (default 0.5, an assumption), in 0 to 1. NaN when there is no safe path.
+    - `max_slope_on_path` = largest `slope_deg` over the path cells.
+13. Build order: tiny test grid with A* and Dijkstra, safety check, cost map on dummy hazards, alpha dial, then corridor, inflation, curve, B0 and B1.
 
 ## Acceptance checks
 
@@ -35,7 +50,8 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
 - [ ] Changing a weight never unblocks a blocked cell (tested)
 - [ ] Cautious mode produces a different, lower-risk path on the demo scene
 - [ ] No safe path case returns the reason and `min_feasible_risk`
-- [ ] Planning on the full tile finishes in a few seconds
+- [ ] Planning on the full tile finishes in a few seconds (512 input, 5 candidates: about 4.5 s, tested safe against the full resolution mask)
+- [ ] Grid at or below `planning_grid_size` is planned unchanged (tested)
 
 ## Uncertainty and failure handling
 

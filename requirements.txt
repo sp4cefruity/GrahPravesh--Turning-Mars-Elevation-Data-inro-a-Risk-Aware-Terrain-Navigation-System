@@ -1,13 +1,13 @@
-# Pinned to the versions the pipeline was tested with (Python 3.14).
+# Pinned to versions that install on Python 3.11 and on Python 3.14 (checked with pip's resolver on both).
 # Add a line here whenever a new dependency is first imported.
 
 # Core pipeline (no UI needed to run it)
-numpy==2.5.4
-scipy==1.18.1
+numpy==2.4.6
+scipy==1.17.1
 scikit-learn==1.9.1
 pytest==9.2.0
 requests==2.34.2
-pyyaml==6.0.2
+pyyaml==6.0.3
 
 # Optional: CNN terrain classifier experiment (specs/01-perception.md). The pipeline runs without it
 # and falls back to the Random Forest. CPU build is enough.

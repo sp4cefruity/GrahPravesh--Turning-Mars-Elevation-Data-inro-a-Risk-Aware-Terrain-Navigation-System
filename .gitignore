@@ -13,3 +13,7 @@ data/raw/
 # pipeline outputs
 outputs/
 *.egg-info/
+
+# archify work folders
+.archify/
+docs/*.delivery.json

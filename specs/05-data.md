@@ -29,6 +29,7 @@ Out of `load_terrain`: a `TerrainGrid` (raw part, perception adds slope, roughne
 - `targets`: planted targets, each `{id, row, col, kind, value}` with id `P0` and up, kind `ice` or `geology`, value 0.2 to 1.0. Rows and columns are on the 256 grid.
 - `conflict_zone`: bool mask where the ice and thermal bands disagree.
 - `gap_mask`: bool mask of injected missing patches.
+- `clean_bands`: `ice_simulated`, `thermal_simulated` and `mineral_simulated` as they really are, with no sensor noise, no gaps and no conflict fault. This is the answer key that `science/evaluate.py` scores against.
 
 ## Dataset
 
@@ -55,13 +56,15 @@ Source tiles are 512 by 512 crops at about 1 m, read straight from the PDS archi
 3. Simulate the material mix per cell (basalt, clay, dust, ice) as a softmax of a terrain term and correlated random patches. Basalt follows slope, clay and ice follow low ground, dust follows flat ground. Ice is kept rare on purpose (score bias 2.5, about 7 percent background) so planted ice targets stand out. The coupling to terrain is our assumption, not physics.
 4. Generate the bands by linear mixing of 4 invented endmember spectra into `b1` to `b5`. `ice_simulated` and `thermal_simulated` both start from the ice fraction. `mineral_simulated` is the clay fraction.
 5. Plant 10 targets per tile on valid cells (at least 10 cells from the edge), each a Gaussian blob of radius 6 cells added to its material (ice for `ice`, clay for `geology`). Signal strength follows the target value.
-6. Corrupt the scene. Band noise is independent per cell with std `0.03 * noise_level`. Missing data is 6 random blocks (8 to 30 cells) plus one partial seam stripe (90 by 3 cells, partial so it cannot wall off the map). One conflict zone (radius 10 cells) sets `ice_simulated` to 0.9 and `thermal_simulated` to 0.1.
+6. Corrupt the scene. Band noise is independent per cell with std `0.03 * noise_level`. Missing data is 6 random blocks (8 to 30 cells) plus one partial seam stripe (90 by 3 cells, partial so it cannot wall off the map). One conflict zone (radius 10 cells) sets `ice_simulated` to 0.9 and `thermal_simulated` to 0.1. The area within 6 cells of `config.start` is always kept free of gaps, so a gap can never block the rover's start (before this, a gap covered the start cell for 4 of 300 seeds and the run stopped with "start cell is blocked"). This changes the scene for about 3 percent of seeds (9 of 300, the ones whose gaps touched that area), including their planted targets, and for no other seed.
 7. Same seed gives the same scene. Each component (DEM noise, materials, gaps, targets, band noise) has its own random stream, so the noise level changes amplitude only and never moves the gaps or targets. Noise level is one config value.
 8. Only the raw crop is cached. Simulated layers are regenerated from `(tile_id, seed, noise_level)`, about 0.15 s.
+9. Report every tile separately. `python -m odyssey.data.tile_report --doc docs/TILE_RESULTS.md` runs the real pipeline once per tile and writes the table (terrain, blocked share, reachable targets, cautious against bold cost, steepest slope on each route, timings). A tile that fails to load or run becomes an error row, never a crash.
+10. Score the science stage against the answer key. `python -m odyssey.science.evaluate` runs scenes over tiles, seeds, noise levels and candidate counts and reports calibration, ranking quality and planted target recall (see spec 03).
 
 ## Acceptance checks
 
-Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5) unless noted.
+Checked by `tests/test_data.py`, `tests/test_tile_report.py` and `tests/test_evaluate.py` unless noted. Most checks run on the real tiles T1 to T5.
 
 - [x] Two loads with the same seed are identical
 - [x] The noise level changes amplitude only, not gaps or targets
@@ -72,14 +75,18 @@ Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5)
 - [x] The input DEM differs from truth, and the gap grows with the noise level
 - [x] Planted targets all sit on valid cells
 - [x] The conflict zone has ice high and thermal low
-- [x] The full pipeline completes on T1 to T5 with every stage real (run by hand, not in pytest)
+- [x] The full pipeline completes on T1 to T5 with every stage real
+- [x] The answer key (`clean_bands`) has no gaps, no noise and no conflict fault, and does not change with the noise level
+- [x] The start cell and the area around it stay visible for every seed we know blocks it, and a seed whose gaps stay away from that area gives the same scene as before
+- [x] The per-tile table has one complete row per tile in `tiles.yaml`, and an unknown tile, a tile without a window, a failed download, a corrupt cache file, a failing stage and a source DEM with holes each give an error row or a result, never a crash
+- [x] The per-site rows group tiles by site and leave failed tiles out of the means
 
 ## Uncertainty and failure handling
 
 - Each product carries a vertical error `sigma_z_m` (0.3 m, an assumption based on the HiRISE statement of tens of centimetres), used for the input noise.
 - If a window read fails, `load_tile` raises with the reason. There is no silent fallback.
 - Not built yet: the synthetic DEM fallback (a missing data stage now stops the run), flagging likely DTM artifacts (seams, interpolated patches) and giving flagged cells a larger sigma. Only nodata is handled today.
-- Results are reported per tile and per site, never pooled.
+- Results are reported per tile and per site, never pooled. The current table is `docs/TILE_RESULTS.md`.
 
 ## Out of scope
 
@@ -95,9 +102,8 @@ Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5)
 ## Open questions
 
 - Udit: add `tile_id` (default "T1") to `PipelineConfig`. Until then the tile is `odyssey.data.DEFAULT_TILE`.
-- Udit: `docs/ARCHITECTURE.md` and `README.md` still say one tile, a 512 by 512 crop and a 700 MB download, and list the SegFormer side track.
-- Saptarshi: `find_candidates` takes the highest few peaks of the whole ice and geology map (about 3 ice and 2 geology by default), so it mostly misses the planted targets. On T1 and T3 at most 2 of 10 were found, even with the planted signal made 5 times stronger. Options: score against the clean material fields instead of the planted blobs (add them to `SceneTruth`), or raise `n_candidates` for evaluation runs.
-- Saptarshi: decide whether to commit the cached crops. No restriction was found, but no DTM specific licence statement exists either.
-- Udit: the README dataset section should name both product ids and credit them as "NASA/JPL/University of Arizona".
+- Udit: check that `docs/ARCHITECTURE.md` no longer says one tile, a 512 by 512 crop and a 700 MB download.
+- Saptarshi: the planted targets are not a usable detection key. On 90 scenes (5 tiles, 3 seeds, 3 noise levels, 5 and 10 candidates) the science stage found about 3 percent of them, because it picks the highest peaks of the whole map. Planted recall stays in the report as a diagnostic only, and the clean fields are the answer key. See spec 03 for the calibration result.
+- Saptarshi: the licence is recorded (no DTM specific licence, public domain images, credit given) and the cached crops are committed.
 - Saptarshi: build the synthetic DEM fallback and the artifact flags, or cut them from the spec.
 - Disha: perception received NaN in `dem` without crashing on all five tiles. Confirm that is the behaviour you want.

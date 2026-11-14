@@ -4,6 +4,7 @@
 
 products:
   A:
+    name: Jezero
     id: DTEEC_023524_1985_023379_1985_U01
     site: Jezero crater, 18.16 to 18.52 N
     url: https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_023500_023599/ESP_023524_1985_ESP_023379_1985/DTEEC_023524_1985_023379_1985_U01.IMG
@@ -17,6 +18,7 @@ products:
     sigma_z_m: 0.3             # assumption from "tens of centimetres" (HiRISE DTM page), not measured here
     licence: "No DTM specific licence stated. HiRISE images are public domain, credit NASA/JPL/University of Arizona (hirise.lpl.arizona.edu/media/usage.php). Checked 2026-11-14."
   B:
+    name: Promethei Terra
     id: DTEEC_021466_1230_021954_1230_A01
     site: Promethei Terra ice-exposing scarp area, 56.58 to 56.71 S (not confirmed to be the exact Dundas 2018 product)
     url: https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_021400_021499/ESP_021466_1230_ESP_021954_1230/DTEEC_021466_1230_021954_1230_A01.IMG

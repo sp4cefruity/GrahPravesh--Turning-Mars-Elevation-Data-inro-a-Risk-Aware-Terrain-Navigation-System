@@ -34,6 +34,8 @@ See `docs/ARCHITECTURE.md`.
   - Product B, `DTEEC_021466_1230_021954_1230_A01`, Promethei Terra (tiles T4 and T5).
   - Tile windows and source details are in `src/odyssey/data/tiles.yaml`. The cropped tiles are in `data/tiles/`.
 - Simulated: spectral bands, ice signal, sensor noise, missing data patches.
+- Results per tile, never pooled across sites: `docs/TILE_RESULTS.md`. Regenerate with `python -m odyssey.data.tile_report --doc docs/TILE_RESULTS.md`.
+- The science stage is scored against the simulated truth with `python -m odyssey.science.evaluate`. Its stated 90 percent intervals hold the truth about 74 percent of the time (see `specs/03-uncertainty-science.md`).
 - One tile per run (256 by 256 at 2 m, reduced from the 512 by 512 crop with simulated noise added), single rover, static map.
 
 ### Modelling assumptions

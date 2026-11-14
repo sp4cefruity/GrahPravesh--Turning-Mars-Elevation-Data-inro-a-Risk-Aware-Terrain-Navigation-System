@@ -29,9 +29,12 @@ See `docs/ARCHITECTURE.md`.
 
 ## Data and assumptions
 
-- Real elevation data: TODO (Saptarshi, source and licence).
+- Real elevation data: two HiRISE digital terrain models from the NASA Planetary Data System, cropped to five 512 by 512 tiles (T1 to T5) at about 1 m per cell. Credit: NASA/JPL/University of Arizona. HiRISE states its images are public domain. No licence is stated for the DTMs themselves.
+  - Product A, `DTEEC_023524_1985_023379_1985_U01`, Jezero crater (tiles T1 to T3).
+  - Product B, `DTEEC_021466_1230_021954_1230_A01`, Promethei Terra (tiles T4 and T5).
+  - Tile windows and source details are in `src/odyssey/data/tiles.yaml`. The cropped tiles are in `data/tiles/`.
 - Simulated: spectral bands, ice signal, sensor noise, missing data patches.
-- Single tile, single rover, static map.
+- One tile per run (256 by 256 at 2 m, reduced from the 512 by 512 crop with simulated noise added), single rover, static map.
 
 ### Modelling assumptions
 
@@ -44,7 +47,7 @@ None of these numbers is fitted to rover data. Every one is a working assumption
   - Geology value is distinctness times slope-free access. Distinctness is the mean of class rarity (from the terrain class probabilities) and the scaled mineral band, when present. Slope-free access is `1 - slope / hard_block_slope_deg`, clipped to 0 to 1.
   - Ranking divides value by the cautious path cost to the target.
 - **Value uncertainty is built from four terms added in quadrature:** sensor noise, classifier disagreement, the share of missing data nearby, and an ice versus thermal conflict. The gains (0.05, 0.5, 0.30, 0.25) and the 0.2 lognormal spread on the target kind weights are assumptions set in `model.py`. Intervals are 90 percent.
-- **The thermal conflict rule assumes a band whose name contains "thermal", where a high value means ice-consistent.** This follows `specs/05-data.md` and is unconfirmed until the data stage exists.
+- **The thermal conflict rule assumes a band whose name contains "thermal", where a high value means ice-consistent.** The data stage follows this convention (`thermal_simulated`, see `specs/05-data.md`).
 
 ## Known limitations
 

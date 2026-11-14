@@ -196,3 +196,104 @@ def test_pipeline_uses_real_perception_and_completes_with_gaps():
     res = pipeline.run_pipeline(PipelineConfig())
     assert res.complete, res.error
     assert np.isnan(res.terrain.slope_deg[~res.terrain.valid_mask]).all()
+
+
+# ---------------------------------------------------------------- CNN experiment (spec 01, "CNN experiment")
+
+torch = pytest.importorskip("torch")
+from odyssey.perception import cnn  # noqa: E402
+from odyssey.perception.params import PerceptionParams  # noqa: E402
+
+CNN_PARAMS = PerceptionParams(classifier="cnn", cnn_epochs=8, cnn_members=3)
+
+
+def cnn_config():
+    return dataclasses.replace(PipelineConfig(), perception=CNN_PARAMS)
+
+
+def steep_patch_terrain():
+    dem = smooth_terrain()
+    dem[20:40, 20:40] += ramp(20, 40.0)
+    return make_terrain(dem)
+
+
+def test_classifier_flag_defaults_to_the_random_forest():
+    assert PerceptionParams().classifier == "forest"
+    assert PipelineConfig().perception.classifier == "forest"
+
+
+def test_cnn_returns_a_contract_valid_hazard_map_with_class_probabilities():
+    t = steep_patch_terrain()
+    _, h = compute_hazards(t, cnn_config())
+    validate_hazards(h, t.shape, need_slope_std=False)
+    assert h.class_probs.shape == (5,) + t.shape
+    assert np.allclose(h.class_probs.sum(axis=0), 1.0, atol=1e-5)
+    assert h.class_probs.min() >= 0.0
+    assert h.epistemic_std.min() >= 0.0 and h.epistemic_std.max() <= 0.5
+
+
+def test_cnn_epistemic_std_is_not_all_zero():
+    _, h = compute_hazards(steep_patch_terrain(), cnn_config())
+    assert h.epistemic_std.max() > 0.0
+
+
+def test_cnn_keeps_the_hard_block_rules_and_evidence_codes():
+    _, h = compute_hazards(steep_patch_terrain(), cnn_config())
+    assert h.hard_block[25:35, 25:35].all()
+    assert not h.hard_block[:10, :10].any()
+    assert set(np.unique(h.evidence_code).tolist()) <= set(h.evidence)
+    assert "CNN" in h.evidence[7]
+
+
+def test_cnn_same_seed_gives_identical_output():
+    t = steep_patch_terrain()
+    a = compute_hazards(t, cnn_config())[1]
+    b = compute_hazards(t, cnn_config())[1]
+    assert np.array_equal(a.class_probs, b.class_probs)
+    assert np.array_equal(a.epistemic_std, b.epistemic_std)
+
+
+def test_cnn_masks_missing_cells_like_the_forest():
+    valid = np.ones((64, 64), dtype=bool)
+    valid[20:30, 20:30] = False
+    full, h = compute_hazards(make_terrain(smooth_terrain(), valid=valid), cnn_config())
+    assert np.isnan(full.slope_deg[~valid]).all()
+    assert (h.hazard_prob[~valid] == 1.0).all() and not h.hard_block[~valid].any()
+    assert (h.terrain_class[~valid] == -1).all()
+
+
+def test_missing_torch_falls_back_to_the_forest_and_says_so(monkeypatch):
+    monkeypatch.setattr(cnn, "torch_available", lambda: False)
+    t = steep_patch_terrain()
+    _, fallback = compute_hazards(t, cnn_config())
+    _, forest = compute_hazards(t, PipelineConfig())
+    assert np.array_equal(fallback.class_probs, forest.class_probs)
+    assert any("fell back" in note for note in fallback.evidence.values())
+    assert "Random Forest" in fallback.evidence[7]
+
+
+def test_class_weights_raise_rare_classes_and_keep_the_mean_loss_scale():
+    y = np.array([0] * 90 + [1] * 9 + [4] * 1)
+    valid = np.ones(y.shape, dtype=bool)
+    w = cnn.class_weights(y, valid, k=5, mode="inverse")
+    assert w[4] > w[1] > w[0]
+    assert (w * np.bincount(y, minlength=5) / y.size).sum() == pytest.approx(1.0)
+    assert np.allclose(cnn.class_weights(y, valid, k=5, mode="none"), 1.0)
+    sq = cnn.class_weights(y, valid, k=5, mode="sqrt_inverse")
+    assert w[4] / w[0] > sq[4] / sq[0] > 1.0
+
+
+def test_class_weights_ignore_invalid_cells_and_reject_unknown_mode():
+    y = np.array([0, 0, 0, 1])
+    valid = np.array([True, True, True, False])
+    w = cnn.class_weights(y, valid, k=2, mode="inverse")
+    assert w[0] == pytest.approx(1.0)  # only class 0 is seen
+    with pytest.raises(ValueError, match="class weight mode"):
+        cnn.class_weights(y, valid, k=2, mode="nope")
+
+
+def test_cnn_loss_weighting_defaults_on_and_can_be_switched_off():
+    assert PerceptionParams().cnn_class_weight == "sqrt_inverse"
+    p = dataclasses.replace(CNN_PARAMS, cnn_class_weight="none")
+    _, h = compute_hazards(steep_patch_terrain(), dataclasses.replace(PipelineConfig(), perception=p))
+    assert np.allclose(h.class_probs.sum(axis=0), 1.0, atol=1e-5)

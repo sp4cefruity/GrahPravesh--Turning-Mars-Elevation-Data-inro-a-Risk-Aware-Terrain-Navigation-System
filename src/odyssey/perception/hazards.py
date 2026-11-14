@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 from ..config import PipelineConfig
 from ..contracts import HazardMap, TerrainGrid
+from . import cnn
 from .params import PerceptionParams, params_from
 from .slope import (aspect_deg, convexity_per_m, fill_invalid_nearest, horn_slope_deg, roughness_m,
                     step_height_m)
@@ -27,7 +28,8 @@ CLASS_NAMES = {0: "smooth", 1: "moderate slope", 2: "rough", 3: "crater rim", 4:
 HAZARD_CLASSES = (3, 4)
 MISSING_CLASS = -1  # label for cells with no data
 
-CODE_NONE, CODE_STEEP, CODE_RIM, CODE_DELTA, CODE_MISSING, CODE_SOFT_SLOPE, CODE_SOFT_ROUGH, CODE_SOFT_CLASS = range(8)
+(CODE_NONE, CODE_STEEP, CODE_RIM, CODE_DELTA, CODE_MISSING, CODE_SOFT_SLOPE, CODE_SOFT_ROUGH, CODE_SOFT_CLASS,
+ CODE_FALLBACK) = range(9)  # CODE_FALLBACK is a legend note only, no cell carries it
 
 
 def combine_hazard(p_slope: np.ndarray, p_rough: np.ndarray, p_class: np.ndarray) -> np.ndarray:
@@ -35,8 +37,9 @@ def combine_hazard(p_slope: np.ndarray, p_rough: np.ndarray, p_class: np.ndarray
     return 1.0 - (1.0 - p_slope) * (1.0 - p_rough) * (1.0 - p_class)
 
 
-def _legend(limit: float, delta: float, p: PerceptionParams) -> dict[int, str]:
-    return {
+def _legend(limit: float, delta: float, p: PerceptionParams, model: str = "Random Forest",
+            fell_back: bool = False) -> dict[int, str]:
+    legend = {
         CODE_NONE: "no hazard rule fired",
         CODE_STEEP: f"rule: slope above the hard limit of {limit:g} deg",
         CODE_RIM: (f"rule: crater rim (convexity above {p.rim_convexity_per_m:g} per m "
@@ -45,8 +48,11 @@ def _legend(limit: float, delta: float, p: PerceptionParams) -> dict[int, str]:
         CODE_MISSING: "missing data (valid_mask False), no hazard estimate, not filled",
         CODE_SOFT_SLOPE: f"soft: slope probability dominates, hazard probability at least {p.soft_flag_prob:g}",
         CODE_SOFT_ROUGH: f"soft: roughness probability dominates, hazard probability at least {p.soft_flag_prob:g}",
-        CODE_SOFT_CLASS: f"soft: Random Forest class vote dominates, hazard probability at least {p.soft_flag_prob:g}",
+        CODE_SOFT_CLASS: f"soft: {model} class vote dominates, hazard probability at least {p.soft_flag_prob:g}",
     }
+    if fell_back:
+        legend[CODE_FALLBACK] = "classifier note: CNN was requested but torch is missing, fell back to Random Forest"
+    return legend
 
 
 def _rule_labels(slope, rough, rim, limit, p: PerceptionParams) -> np.ndarray:
@@ -102,7 +108,15 @@ def compute_hazards(terrain: TerrainGrid, config: PipelineConfig) -> tuple[Terra
     rim = (convex < -p.rim_convexity_per_m) & (maximum_filter(slope, size=5, mode="nearest") > p.rim_slope_deg)
     labels = _rule_labels(slope, rough, rim, limit, p)
     features = np.stack([slope, rough, step, convex], axis=-1)
-    class_probs, epistemic = _forest_votes(features, labels, valid, config.seeds.perception, p)
+    if p.classifier not in ("forest", "cnn"):
+        raise ValueError(f"unknown perception classifier {p.classifier!r}, use 'forest' or 'cnn'")
+    use_cnn = p.classifier == "cnn" and cnn.torch_available()
+    if use_cnn:
+        channels = cnn.build_channels(dem, slope, rough, terrain.bands, valid)
+        class_probs, epistemic = cnn.cnn_votes(channels, labels, valid, config.seeds.perception,
+                                               len(CLASS_NAMES), HAZARD_CLASSES, p)
+    else:
+        class_probs, epistemic = _forest_votes(features, labels, valid, config.seeds.perception, p)
 
     p_slope = ndtr((slope - p.slope_center_deg) / p.slope_sigma_deg)
     p_rough = ndtr((rough - p.rough_center_m) / p.rough_sigma_m)
@@ -133,6 +147,7 @@ def compute_hazards(terrain: TerrainGrid, config: PipelineConfig) -> tuple[Terra
                        simulated_layers=terrain.simulated_layers, slope_deg=keep(slope), roughness=keep(rough),
                        aspect=keep(aspect), source=terrain.source)
     hazards = HazardMap(hazard_prob=hazard, terrain_class=terrain_class, class_probs=class_probs,
-                        epistemic_std=epistemic, hard_block=hard_block, evidence=_legend(limit, delta, p),
+                        epistemic_std=epistemic, hard_block=hard_block, evidence=_legend(limit, delta, p, "CNN ensemble" if use_cnn else "Random Forest",
+                                         fell_back=p.classifier == "cnn" and not use_cnn),
                         slope_std_deg=None, evidence_code=code)
     return full, hazards

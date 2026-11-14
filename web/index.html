@@ -1,0 +1,1076 @@
+<title>Grah Pravesh</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amita:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Rajdhani:wght@500;600&family=Sarpanch:wght@500;700;800;900&family=Teko:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<style>
+/* Layout concept: a dark fixed three.js sky (cutaway Mars, dashed orbits, drifting diamond lattice) behind open sections.
+   Content lives in solid filled boxes. Boxes that carry text show only a topic until hovered, then a colour wipe
+   rises and the text opens. Tables have full row and column lines. No underlines anywhere. Single dark look by choice.
+   Type: Tiro Devanagari Hindi for the name, Sarpanch for labels and numbers, Amita for the subtitle and Hindi accents,
+   Cormorant Garamond for reading text. */
+:root {
+  --void: #02030a;
+  --mars: #ff2b1c;
+  --ember: #ff8a2b;
+  --gold: #ffd27a;
+  --magenta: #ff3fa0;
+  --cyan: #3fd2ff;
+  --text: #f4eef8;
+  --muted: #b9b6d0;
+  --box: #0d1232;
+  --box-deep: #170a14;
+  --grid: rgba(255, 138, 43, .55);
+  --f-name: "Tiro Devanagari Hindi", "Amita", Georgia, serif;
+  --f-title: "Sarpanch", "Rajdhani", sans-serif;
+  --f-sub: "Amita", "Tiro Devanagari Hindi", Georgia, serif;
+  --f-head: "Teko", "Khand", "Rajdhani", sans-serif;
+  --f-hindi: "Rajdhani", "Hind", sans-serif;
+  --f-body: "Cormorant Garamond", "Tiro Devanagari Hindi", Georgia, serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--void); color: var(--text); font-family: var(--f-body); font-weight: 500; font-size: 1.26rem; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0; overflow-x: hidden;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--void); }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block;
+  background: radial-gradient(55% 45% at 72% 72%, #1a0507 0%, transparent 70%), radial-gradient(80% 60% at 15% 15%, #070b24 0%, var(--void) 75%); }
+#app { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; }
+a { color: var(--gold); text-decoration: none; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+p, li { text-shadow: 0 1px 10px #02030a; }
+
+/* header */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; padding: 12px 0; background: linear-gradient(180deg, rgba(2,3,10,.94), rgba(2,3,10,0)); }
+.brand { font-family: var(--f-name); font-size: 1.7rem; color: var(--text); white-space: nowrap; }
+.brand b { color: var(--mars); font-weight: 400; }
+.links { display: flex; gap: 6px; flex-wrap: wrap; }
+.links a { font-family: var(--f-title); font-weight: 700; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 9px 14px; background: transparent; transition: background .25s, color .25s; }
+.links a:hover { background: #161c4a; color: var(--text); }
+.links a.on { background: var(--mars); color: var(--void); }
+
+/* hero */
+.hero { min-height: 560px; padding: 64px 0 52px; position: relative; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.eyebrow { font-family: var(--f-title); font-weight: 500; font-size: .82rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ember); }
+.title {
+  font-family: var(--f-name); font-weight: 400; margin: 0; line-height: 1;
+  font-size: clamp(3.2rem, 13.5vw, 10.5rem); letter-spacing: -.005em;
+  background: linear-gradient(100deg, #fff4d6 0%, var(--gold) 32%, var(--ember) 64%, var(--mars) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: .02em transparent;
+  filter: drop-shadow(0 0 26px rgba(255, 90, 30, .3));
+}
+.title .hi { margin-right: .12em; }
+.sub { font-family: var(--f-sub); font-weight: 700; font-size: clamp(.95rem, 3.7vw, 2.1rem); margin: 0; color: var(--text); white-space: nowrap; }
+.lede { max-width: 52ch; color: #e8e2f2; margin: 4px 0 0; font-size: 1.34rem; }
+.chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.chip { display: inline-block; font-family: var(--f-title); font-weight: 800; font-size: .86rem; letter-spacing: .12em; text-transform: uppercase; color: var(--void); background: var(--mars); padding: 13px 22px; transition: background .25s, transform .25s; }
+.chip:hover { background: var(--gold); transform: translateY(-3px); }
+.vert { position: absolute; right: 0; top: 90px; writing-mode: vertical-rl; font-family: var(--f-title); font-weight: 500; font-size: .74rem; letter-spacing: .34em; color: var(--mars); text-transform: uppercase; }
+@media (max-width: 1250px) { .vert { display: none; } }
+
+/* sections */
+section.block { padding: 60px 0 24px; scroll-margin-top: 70px; }
+.kicker { font-family: var(--f-title); font-weight: 500; font-size: .8rem; letter-spacing: .28em; text-transform: uppercase; color: var(--ember); margin: 0 0 4px; }
+.big { font-family: var(--f-head); font-weight: 500; text-transform: uppercase; margin: 0; line-height: .86; font-size: clamp(3.6rem, 15vw, 9.5rem); color: transparent; -webkit-text-stroke: 1.2px var(--mars); letter-spacing: .01em; }
+.big .fill { color: var(--mars); -webkit-text-stroke: 0; }
+.big.sm { font-size: clamp(2.8rem, 10vw, 5.8rem); }
+.hindi { font-family: var(--f-hindi); font-weight: 600; color: var(--gold); font-size: clamp(1.3rem, 3.4vw, 2rem); letter-spacing: .02em; margin: 10px 0 0; }
+.intro { max-width: 60ch; color: #e8e2f2; margin: 14px 0 10px; font-size: 1.3rem; }
+.demo-note { font-style: italic; font-size: 1.08rem; color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 880px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* filled boxes */
+.panel { background: var(--box); padding: 20px; min-width: 0; }
+.panel.deep { background: var(--box-deep); }
+canvas.map { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; cursor: crosshair; background: var(--void); max-width: 100%; }
+.legend { display: flex; align-items: center; gap: 10px; font-family: var(--f-title); font-weight: 500; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 12px; flex-wrap: wrap; }
+.legend .bar { flex: 1; height: 8px; min-width: 80px; }
+.tagline { font-family: var(--f-title); font-weight: 700; font-size: .8rem; letter-spacing: .22em; text-transform: uppercase; color: var(--ember); margin: 0 0 10px; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { font-family: var(--f-title); font-weight: 700; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; color: var(--text); background: #1a2058; border: 0; padding: 10px 16px; transition: background .25s, color .25s, transform .25s; }
+.seg button:hover { background: #2a3280; transform: translateY(-2px); }
+.seg button[aria-pressed="true"] { background: var(--mars); color: var(--void); }
+.ctl { display: grid; gap: 6px; }
+.ctl label { font-family: var(--f-title); font-weight: 500; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+.ctl label b { color: var(--gold); font-weight: 700; }
+.ctls { display: grid; gap: 18px; }
+input[type=range] { width: 100%; accent-color: var(--ember); }
+
+.trace { font-size: 1.14rem; color: var(--text); min-height: 3.4em; overflow-wrap: anywhere; font-style: italic; }
+.trace span { color: var(--gold); font-style: normal; font-family: var(--f-title); font-weight: 700; font-size: .92em; }
+.note-text { margin: 0; font-size: 1.16rem; color: #f1ebf6; }
+.readout { font-size: 1.22rem; margin: 14px 0 0; }
+.readout b { color: var(--gold); font-weight: 700; }
+.cap { margin: 10px 0 0; font-size: 1.06rem; color: var(--muted); font-style: italic; }
+canvas.curve { width: 100%; height: auto; aspect-ratio: 16 / 9; display: block; max-width: 100%; }
+
+/* tables: full row and column lines */
+.tablewrap { overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; border: 1px solid var(--grid); }
+table.grid th, table.grid td { border: 1px solid var(--grid); padding: 10px 14px; text-align: left; vertical-align: top; }
+table.grid thead th { background: #2a0b0d; color: var(--gold); font-family: var(--f-title); font-weight: 700; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; }
+table.grid tbody td:first-child { background: rgba(255, 138, 43, .1); font-family: var(--f-title); font-weight: 700; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ember); white-space: nowrap; }
+table.stats td { font-family: var(--f-title); font-weight: 500; font-size: .98rem; font-variant-numeric: tabular-nums; }
+table.stats td.ours { color: var(--gold); font-weight: 800; }
+table.compare td { font-size: 1.14rem; }
+.ok { color: #7dffb0; } .bad { color: var(--mars); }
+
+/* reveal boxes: topic first, text on hover with a colour wipe */
+.rv { position: relative; overflow: hidden; cursor: pointer; background: var(--fill, var(--box)); isolation: isolate; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+.rv::before { content: ""; position: absolute; inset: 0; background: var(--hov, #8f1d14); transform: translateY(101%); transition: transform .55s cubic-bezier(.2,.7,.2,1); z-index: -2; }
+.rv::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: linear-gradient(45deg, rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(-45deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; }
+.rv:hover::before, .rv:focus-visible::before, .rv.open::before { transform: translateY(0); }
+.rv:hover { transform: translateY(-3px); }
+.rv .hid { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .55s cubic-bezier(.2,.7,.2,1), opacity .4s ease .08s; }
+.rv .hid > * { overflow: hidden; min-height: 0; }
+.rv:hover .hid, .rv:focus-visible .hid, .rv.open .hid { grid-template-rows: 1fr; opacity: 1; }
+.rv .plus { position: absolute; top: 14px; right: 16px; font-family: var(--f-title); font-weight: 700; font-size: 1.4rem; line-height: 1; color: rgba(255,255,255,.8); transition: transform .45s ease; }
+.rv:hover .plus, .rv:focus-visible .plus, .rv.open .plus { transform: rotate(45deg); }
+
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 14px; padding: 16px 44px 16px 16px; --fill: #0d1232; --hov: #4a0f12; }
+.row.sel { --fill: #2a0f3a; }
+.rk { font-family: var(--f-title); font-weight: 900; font-size: 2.6rem; line-height: .9; color: var(--mars); }
+.rname { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.rname strong { font-family: var(--f-title); font-weight: 800; font-size: 1.12rem; letter-spacing: .04em; text-transform: uppercase; }
+.rname small { font-family: var(--f-title); font-weight: 500; font-size: .76rem; color: var(--ember); letter-spacing: .12em; text-transform: uppercase; }
+.ev { font-size: 1.08rem; color: #f1ebf6; margin: 6px 0 10px; line-height: 1.3; }
+.track { position: relative; height: 14px; background: rgba(255,255,255,.08); margin-top: 8px; }
+.track .mean { position: absolute; top: -2px; bottom: -2px; width: 3px; background: var(--gold); }
+.track .whisk { position: absolute; top: 5px; height: 4px; background: linear-gradient(90deg, var(--magenta), var(--ember)); }
+.track .capL, .track .capR { position: absolute; top: 1px; bottom: 1px; width: 2px; background: var(--ember); }
+.meta { display: flex; gap: 6px 20px; flex-wrap: wrap; font-family: var(--f-title); font-weight: 500; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.meta b { color: var(--text); font-weight: 700; }
+.tie { color: var(--cyan); }
+.tiny { font-family: var(--f-title); font-weight: 500; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 2px 0 0; }
+
+.info { padding: 18px 20px; --fill: #14194a; --hov: #8f1d14; }
+.info .tagline { margin: 0; padding-right: 30px; }
+.info .note-text { padding-top: 10px; }
+
+/* pipeline */
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 18px; }
+.node { min-height: 190px; padding: 18px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; }
+.node:nth-child(1) { --fill: #14194a; --hov: #c8201a; } .node:nth-child(2) { --fill: #1b1450; --hov: #b02a78; } .node:nth-child(3) { --fill: #101f58; --hov: #187a96; }
+.node:nth-child(4) { --fill: #2a0f2e; --hov: #d9661a; } .node:nth-child(5) { --fill: #0f2a3c; --hov: #7a5a12; }
+.node h4 { margin: 0; font-family: var(--f-title); font-weight: 800; font-size: 1.4rem; text-transform: uppercase; color: var(--gold); letter-spacing: .04em; }
+.node p { margin: 0; font-size: 1.12rem; line-height: 1.3; padding-top: 4px; }
+.node .out { font-family: var(--f-title); font-weight: 500; font-size: .74rem; color: var(--ember); letter-spacing: .1em; text-transform: uppercase; }
+.compare-wrap { margin-top: 26px; }
+
+footer { padding: 50px 0 44px; margin-top: 40px; display: flex; flex-wrap: wrap; gap: 14px 30px; justify-content: space-between; align-items: end; background: linear-gradient(0deg, rgba(2,3,10,.9), rgba(2,3,10,0)); }
+footer .fb { font-family: var(--f-name); font-size: 2rem; }
+footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; }
+
+/* about */
+.about-hero { padding: 64px 0 12px; }
+.credit { font-family: var(--f-sub); font-weight: 700; font-size: clamp(1.4rem, 4vw, 2.4rem); margin: 18px 0 0; color: var(--text); }
+.credit b { color: var(--gold); font-weight: 700; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; margin-top: 24px; }
+.tile { height: 300px; padding: 22px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
+.tile h3 { margin: 0; font-family: var(--f-head); font-weight: 500; text-transform: uppercase; font-size: 2.3rem; line-height: .95; color: #fff; letter-spacing: .02em; padding-right: 26px; }
+.tile .tx { margin: 0; font-size: 1.1rem; line-height: 1.3; color: #fff; padding-top: 2px; }
+.tile .st { display: block; margin-top: 8px; font-family: var(--f-title); font-weight: 700; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.t1 { --fill: #c8201a; --hov: #4d0b08; } .t2 { --fill: #d9661a; --hov: #6b2606; } .t3 { --fill: #2b3790; --hov: #0c1244; }
+.t4 { --fill: #b02a78; --hov: #521036; } .t5 { --fill: #187a96; --hov: #093a4c; } .t6 { --fill: #7a5a12; --hov: #2f2204; }
+.tilehint { font-style: italic; color: var(--muted); font-size: 1.05rem; margin: 12px 0 0; }
+.prose p { max-width: 66ch; margin: 0 0 14px; font-size: 1.28rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose .hindi { margin: 0 0 12px; }
+.fine { color: var(--muted); font-size: 1.06rem !important; font-style: italic; }
+.stackline { font-family: var(--f-title); font-weight: 500; font-size: .92rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text); margin: 0; line-height: 1.9; }
+.stackline i { color: var(--mars); font-style: normal; padding: 0 10px; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rv, .rv::before, .rv .hid, .rv .plus, .chip, .seg button { transition: none; } }
+</style>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<div id="app">
+  <header class="nav">
+    <a class="brand" href="#top"><span lang="hi">ग्रह</span> <b>Pravesh</b></a>
+    <nav class="links" aria-label="Sections">
+      <a href="#costmap">Cost map</a>
+      <a href="#path">Path</a>
+      <a href="#targets">Targets</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#about" id="nav-about">About us</a>
+    </nav>
+  </header>
+
+  <!-- ============ HOME ============ -->
+  <main id="view-home">
+    <section class="hero" id="top">
+      <div class="vert">MARS-09 · Track A · Odyssey</div>
+      <div class="eyebrow">Autonomous reconnaissance for MARS-09</div>
+      <h1 class="title"><span class="hi" lang="hi">ग्रह</span>Pravesh</h1>
+      <p class="sub">someone get these craters out of here</p>
+      <p class="lede">A rover that cannot phone home needs a map it can trust, a route it can defend, and a shortlist of places worth the trip. Ours says how sure it is at every step.</p>
+      <div class="chips">
+        <a class="chip" href="#costmap">Terrain and cost map</a>
+        <a class="chip" href="#path">Hazard-free path</a>
+        <a class="chip" href="#targets">Ranked science targets</a>
+      </div>
+    </section>
+
+    <!-- 1. COST MAP -->
+    <section class="block" id="costmap">
+      <p class="kicker">Deliverable 1</p>
+      <h2 class="big">Terrain <span class="fill">&amp; cost map</span></h2>
+      <p class="hindi" lang="hi">मंगल का नक्शा</p>
+      <p class="intro">Every cell gets a slope, a roughness, a chance of being soft sand or a boulder field, and from those a hazard probability and a cost with a spread. Switch layers to see the cost, the doubt behind it, and the hazards it implies. Click any cell to trace its numbers.</p>
+      <p class="demo-note">Live demo on a simulated terrain generated in your browser. The Python pipeline in the repo will replace it with real HiRISE elevation data and its own outputs. Dotted patches are simulated missing data.</p>
+      <div class="split">
+        <div class="panel">
+          <canvas class="map" id="map1" width="640" height="640" aria-label="Terrain cost map"></canvas>
+          <div class="legend"><span id="lg-lo">low</span><div class="bar" id="lg-bar"></div><span id="lg-hi">high</span></div>
+        </div>
+        <div class="stack">
+          <div class="panel">
+            <p class="tagline">Layer</p>
+            <div class="seg" id="layers" role="group" aria-label="Map layer">
+              <button type="button" data-layer="cost" aria-pressed="true">Cost μ</button>
+              <button type="button" data-layer="sigma" aria-pressed="false">Uncertainty σ</button>
+              <button type="button" data-layer="haz" aria-pressed="false">Hazard P</button>
+              <button type="button" data-layer="elev" aria-pressed="false">Elevation</button>
+            </div>
+            <div class="ctl" style="margin-top:20px">
+              <label for="noise1">Sensor noise <b data-out="noise">0.35</b></label>
+              <input type="range" id="noise1" data-bind="noise" min="0" max="1" step="0.05" value="0.35">
+            </div>
+          </div>
+          <div class="panel deep">
+            <p class="tagline">Trace a cell</p>
+            <div class="trace" id="trace">Click the map. You will see slope, roughness, class probabilities, hazard probability and the cost breakdown for that cell.</div>
+          </div>
+          <div class="panel info rv" tabindex="0">
+            <span class="plus" aria-hidden="true">+</span>
+            <p class="tagline">What goes into one cell</p>
+            <div class="hid"><div><p class="note-text">Slope and roughness come from the elevation grid. The elevation is perturbed with correlated noise to get a slope spread. A terrain classifier gives class probabilities, so hazard is a probability, not a yes or no. Steep or very likely hazardous cells are hard blocked, and that rule is separate from the soft cost weights.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PATH -->
+    <section class="block" id="path">
+      <p class="kicker">Deliverable 2</p>
+      <h2 class="big">Planned <span class="fill">path</span></h2>
+      <p class="hindi" lang="hi">सुरक्षित मार्ग</p>
+      <p class="intro">The planner prices each step with a bad-case average of its cost (CVaR). One dial moves the rover from bold to cautious. A safety margin around blocked ground grows with distance driven, because position estimates drift. The amber band is a corridor of near-equal routes, so a drifting rover still has room.</p>
+      <p class="demo-note">Same simulated terrain. The dashed line is the baseline: a slope-threshold cost with A*, no uncertainty.</p>
+      <div class="split">
+        <div class="panel">
+          <canvas class="map" id="map2" width="640" height="640" aria-label="Planned path over the cost map"></canvas>
+          <div class="legend">
+            <span style="color:var(--gold)">━ Grah Pravesh</span>
+            <span style="color:#bfe9ff">╌ Baseline B0</span>
+            <span style="color:var(--ember)">▒ Corridor</span>
+            <span style="color:var(--mars)">▓ Hard block</span>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="panel ctls">
+            <div class="ctl">
+              <label for="alpha">Risk dial (CVaR α) <b id="alpha-out">cautious 0.90</b></label>
+              <input type="range" id="alpha" min="0" max="0.99" step="0.01" value="0.9">
+            </div>
+            <div class="ctl">
+              <label for="drift">Localization drift margin <b id="drift-out">1.0</b></label>
+              <input type="range" id="drift" min="0" max="2" step="0.1" value="1">
+            </div>
+            <div class="ctl">
+              <label for="tau">Corridor tolerance <b id="tau-out">6%</b></label>
+              <input type="range" id="tau" min="0.01" max="0.2" step="0.01" value="0.06">
+            </div>
+            <div class="ctl">
+              <label for="noise2">Sensor noise <b data-out="noise">0.35</b></label>
+              <input type="range" id="noise2" data-bind="noise" min="0" max="1" step="0.05" value="0.35">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="tablewrap">
+              <table class="grid stats">
+                <thead><tr><th>Measure</th><th>Grah Pravesh</th><th>Baseline B0</th></tr></thead>
+                <tbody id="stats"></tbody>
+              </table>
+            </div>
+            <p class="readout" id="readout"></p>
+          </div>
+          <div class="panel">
+            <p class="tagline">Risk versus length</p>
+            <canvas class="curve" id="curve" width="640" height="360" aria-label="Hazard exposure against path length for different risk dial settings"></canvas>
+            <p class="cap">Each dot is a full re-plan at a different α. The ringed dot is your setting. More caution costs distance and buys less hazard exposure.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TARGETS -->
+    <section class="block" id="targets">
+      <p class="kicker">Deliverable 3</p>
+      <h2 class="big">Science <span class="fill">targets</span></h2>
+      <p class="hindi" lang="hi">खोज के लक्ष्य</p>
+      <p class="intro">Each candidate is scored on hydration signal, ice prior and geological interest, minus the risk of getting there. We resample the noisy inputs and the weights 1000 times, so every target gets a range of ranks, not a single number. Overlapping intervals are flagged as ties.</p>
+      <p class="demo-note">Targets, hydration and ice values are simulated, as are the spectral layers. They show the method, not real Mars evidence. Hover a target to read its evidence.</p>
+      <div class="split">
+        <div class="panel">
+          <canvas class="map" id="map3" width="640" height="640" aria-label="Map of ranked science targets"></canvas>
+          <div class="legend"><span>Marker rings widen with rank uncertainty</span></div>
+        </div>
+        <div class="stack">
+          <div class="panel ctls">
+            <div class="ctl">
+              <label for="beta">Risk aversion (access cost weight) <b id="beta-out">0.35</b></label>
+              <input type="range" id="beta" min="0" max="1" step="0.05" value="0.35">
+            </div>
+            <div class="ctl">
+              <label for="wig">Weight uncertainty <b id="wig-out">0.30</b></label>
+              <input type="range" id="wig" min="0" max="1" step="0.05" value="0.3">
+            </div>
+            <div class="ctl">
+              <label for="noise3">Sensor noise <b data-out="noise">0.35</b></label>
+              <input type="range" id="noise3" data-bind="noise" min="0" max="1" step="0.05" value="0.35">
+            </div>
+          </div>
+          <div class="rows" id="rows" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PIPELINE -->
+    <section class="block" id="pipeline">
+      <p class="kicker">How it fits together</p>
+      <h2 class="big">The <span class="fill">pipeline</span></h2>
+      <p class="hindi" lang="hi">पूरी प्रक्रिया</p>
+      <p class="intro">Five modules, one contract between each, and uncertainty carried in every type. Hover a stage to see what it does.</p>
+      <div class="flow">
+        <div class="node rv" tabindex="0"><span class="plus" aria-hidden="true">+</span><h4>Data</h4><div class="out">TerrainGrid</div><div class="hid"><div><p>Real elevation tile, plus simulated bands, noise and missing patches from one seed.</p></div></div></div>
+        <div class="node rv" tabindex="0"><span class="plus" aria-hidden="true">+</span><h4>Perception</h4><div class="out">HazardMap</div><div class="hid"><div><p>Slope, roughness, step height and terrain classes with probabilities.</p></div></div></div>
+        <div class="node rv" tabindex="0"><span class="plus" aria-hidden="true">+</span><h4>Uncertainty</h4><div class="out">CostMap μ, σ</div><div class="hid"><div><p>Monte Carlo over elevation and sensor noise gives a mean and spread per cell.</p></div></div></div>
+        <div class="node rv" tabindex="0"><span class="plus" aria-hidden="true">+</span><h4>Planning</h4><div class="out">PathResult</div><div class="hid"><div><p>CVaR A*, Dijkstra check, drift margin, corridor, safety verification.</p></div></div></div>
+        <div class="node rv" tabindex="0"><span class="plus" aria-hidden="true">+</span><h4>Science</h4><div class="out">ScienceTarget[]</div><div class="hid"><div><p>Candidates scored and ranked by Monte Carlo, with evidence strings.</p></div></div></div>
+      </div>
+      <div class="panel compare-wrap">
+        <div class="tablewrap">
+          <table class="grid compare">
+            <thead><tr><th>Stage</th><th>Baseline B0</th><th>Grah Pravesh</th></tr></thead>
+            <tbody>
+              <tr><td>Terrain</td><td>Slope threshold</td><td>Slope, roughness, class probabilities, DEM noise propagation</td></tr>
+              <tr><td>Cost</td><td>One number per cell</td><td>Mean and spread per cell, hazard probability, hard and soft rules kept apart</td></tr>
+              <tr><td>Planner</td><td>A* on the mean</td><td>A* on CVaR with a risk dial, drift margin, corridor, Dijkstra cross-check</td></tr>
+              <tr><td>Science</td><td>Weighted sum, one rank</td><td>Monte Carlo ranks with intervals, access risk, evidence strings</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>
+        <div class="fb"><span lang="hi">ग्रह</span> Pravesh</div>
+        <p>Brought to you by Team Spacefrooties. HackInnovision 2026, Track A, Planetary Reconnaissance and Autonomous Navigation.</p>
+      </div>
+      <p>Demo values on this page are simulated and unverified against real rover data.</p>
+    </footer>
+  </main>
+
+  <!-- ============ ABOUT ============ -->
+  <main id="view-about" hidden>
+    <section class="about-hero">
+      <p class="kicker">Who we are</p>
+      <h2 class="big">About <span class="fill">us</span></h2>
+      <p class="hindi" lang="hi">आइए, हमसे जुड़ें</p>
+      <p class="credit">Brought to you by <b>Team Spacefrooties</b></p>
+      <p class="intro">We read the brief as one chain, not three tasks: a map that admits what it does not know, a route that spends risk on purpose, and a shortlist that shows how firm each rank is.</p>
+    </section>
+
+    <section class="block" style="padding-top:28px">
+      <p class="kicker">What we bring to the problem</p>
+      <h2 class="big sm">Key <span class="fill">features</span></h2>
+      <p class="hindi" lang="hi">हमारी खूबियाँ</p>
+      <div class="tiles">
+        <div class="tile rv t1" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Localization uncertainty</h3>
+          <div class="hid"><div><p class="tx">A rover without GPS drifts the further it drives. The safety margin around blocked ground grows with distance travelled, following Sanchez-Ibanez et al. (IROS 2022), so longer routes get wider berths.</p><span class="st">Shown on this page</span></div></div></div>
+        <div class="tile rv t2" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Risk you can dial</h3>
+          <div class="hid"><div><p class="tx">Steps are priced by the bad-case average of their cost, and hazards are probabilities that combine slope, roughness and terrain class. One dial moves the rover from bold to cautious. Hard safety rules stay apart from soft weights.</p><span class="st">Shown on this page</span></div></div></div>
+        <div class="tile rv t3" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Doubt in every layer</h3>
+          <div class="hid"><div><p class="tx">The elevation grid is perturbed with correlated noise to see where slopes cannot be trusted, including missing patches. Tree votes from a Random Forest give model uncertainty. A small SegFormer on rover images is an optional side track.</p><span class="st">In the Python build</span></div></div></div>
+        <div class="tile rv t4" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Corridors, not lines</h3>
+          <div class="hid"><div><p class="tx">Two shortest-path runs, from the start and from the goal, give every route within a few percent of optimal. That band survives drift and surprises between uplinks.</p><span class="st">Shown on this page</span></div></div></div>
+        <div class="tile rv t5" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Ranks you can question</h3>
+          <div class="hid"><div><p class="tx">1000 resamples give each target a rank interval and a chance of making the top three, with ties flagged. Every result carries an evidence string, a safety check confirms the path avoids hard hazards, and honest baselines sit beside our model.</p><span class="st">Shown on this page</span></div></div></div>
+        <div class="tile rv t6" tabindex="0"><span class="plus" aria-hidden="true">+</span><h3>Research we stand on</h3>
+          <div class="hid"><div><p class="tx">Brad and Balog 2025 (terrain A*, our weak baseline). Sanchez-Ibanez et al. 2022 (drift margin). Endo et al. 2023 (class probabilities with CVaR). AI4Mars, JPL SPOC, Perseverance AutoNav. HiRISE, CRISM and SWIM data.</p><span class="st">Full notes in the repo</span></div></div></div>
+      </div>
+      <p class="tilehint">Hover a box, or tap it on a phone, to read more.</p>
+    </section>
+
+    <section class="block" style="padding-top:28px">
+      <p class="kicker">Why we are doing this</p>
+      <h2 class="big sm">Our <span class="fill">motivation</span></h2>
+      <div class="panel prose" style="margin-top:20px;padding:26px">
+        <p class="hindi" lang="hi">भारत का अगला कदम, मंगल की सतह पर</p>
+        <p>India reached Mars orbit on its first attempt with Mangalyaan in 2014, and put Vikram and the Pragyan rover on the Moon with Chandrayaan-3 in 2023. A rover on the surface of Mars is the natural next question, and it is a harder one. Signals take minutes each way, so the rover has to make its own decisions.</p>
+        <p>We are students working on one small piece of that question: how a rover can plan safely, and choose where to look, while being honest about what it cannot see. We hope the ideas here, the risk dial, the drift margin and the rank intervals, are useful to people building the real thing.</p>
+        <p class="fine">This is a hackathon project. It is not affiliated with ISRO, and nothing here is a claim about real rover safety.</p>
+      </div>
+    </section>
+
+    <section class="block" style="padding-top:28px">
+      <p class="kicker">Built with</p>
+      <div class="panel deep"><p class="stackline">Python<i>◆</i>NumPy<i>◆</i>SciPy<i>◆</i>rasterio<i>◆</i>scikit-learn<i>◆</i>numba<i>◆</i>PyTorch<i>◆</i>SegFormer<i>◆</i>Streamlit<i>◆</i>Plotly<i>◆</i>three.js</p></div>
+    </section>
+
+    <section class="block" style="padding-top:28px">
+      <p class="kicker">Limits we state openly</p>
+      <div class="panel deep prose" style="padding:26px">
+        <p>One elevation tile, one rover, a static map. No wheel slip or power model.</p>
+        <p>Spectral, ice and noise layers are simulated. Slope limits and cost weights are assumptions, unverified against real rover data. The CVaR cost is computed edge by edge from a Gaussian assumption, so it is cautious but not a formal safety guarantee.</p>
+        <p>The maps on this page run a small in-browser version of the method on simulated terrain. The Python pipeline is the real build.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div>
+        <div class="fb"><span lang="hi">ग्रह</span> Pravesh</div>
+        <p>Brought to you by Team Spacefrooties.</p>
+      </div>
+      <a class="chip" href="#top">Back to the demo</a>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* ===================== math helpers ===================== */
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function gauss(r) { var u = 0, v; while (!u) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+  function smooth(a, b, x) { var t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function erf(x) { var s = x < 0 ? -1 : 1; x = Math.abs(x); var t = 1 / (1 + 0.3275911 * x); var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return s * y; }
+  function Phi(x) { return 0.5 * (1 + erf(x / Math.SQRT2)); }
+  function invPhi(p) { var q = p < 0.5 ? p : 1 - p; var t = Math.sqrt(-2 * Math.log(q)); var x = t - (2.515517 + 0.802853 * t + 0.010328 * t * t) / (1 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t); return p < 0.5 ? -x : x; }
+  function cvarFactor(a) { if (a <= 0.001) return 0; var z = invPhi(a); return Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI) / (1 - a); }
+  function makeNoise(seed) {
+    var r = mulberry32(seed), S = 64, t = new Float32Array(S * S), i;
+    for (i = 0; i < t.length; i++) t[i] = r();
+    function g(a, b) { return t[(((b % S) + S) % S) * S + (((a % S) + S) % S)]; }
+    function f(x, y) {
+      var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+      var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      return (g(xi, yi) * (1 - u) + g(xi + 1, yi) * u) * (1 - v) + (g(xi, yi + 1) * (1 - u) + g(xi + 1, yi + 1) * u) * v;
+    }
+    return function (x, y, oct) { var a = 1, fr = 1, sum = 0, n = 0, o; for (o = 0; o < oct; o++) { sum += a * f(x * fr, y * fr); n += a; a *= 0.5; fr *= 2; } return sum / n; };
+  }
+
+  /* ===================== terrain model (simulated) ===================== */
+  var N = 88, CELL = 10, SLOPE_BLOCK = 25, DELTA = 0.5;
+  var CRATERS = [[42, 46, 11, 32], [63, 27, 8, 24], [24, 61, 9, 26], [71, 66, 7, 20], [29, 26, 7, 20], [55, 55, 6, 16], [14, 38, 6, 16], [76, 44, 5, 12]];
+  var MISSING = [[31, 40, 5], [66, 48, 4]];
+
+  function buildModel(noise) {
+    var n2 = N * N, i, x, y;
+    var nz1 = makeNoise(11), nz2 = makeNoise(23), nz3 = makeNoise(37), nz4 = makeNoise(53);
+    var z = new Float32Array(n2);
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) {
+      var h = 46 * nz1(x / 24, y / 24, 4) + 9 * nz2(x / 8 + 40, y / 8, 3) + 0.15 * (N - y);
+      CRATERS.forEach(function (c) {
+        var dx = x - c[0], dy = y - c[1], r = Math.sqrt(dx * dx + dy * dy), R = c[2], d = c[3];
+        if (r < R) h -= d * (1 - (r / R) * (r / R));
+        var q = (r - R) / (0.22 * R); h += 0.28 * d * Math.exp(-q * q);
+      });
+      z[y * N + x] = h;
+    }
+    var M = { z: z, theta: new Float32Array(n2), tsig: new Float32Array(n2), rough: new Float32Array(n2), pc: new Float32Array(n2), psand: new Float32Array(n2), prock: new Float32Array(n2),
+      phaz: new Float32Array(n2), mu: new Float32Array(n2), sg: new Float32Array(n2), blk: new Uint8Array(n2), miss: new Uint8Array(n2), dzdx: new Float32Array(n2), dzdy: new Float32Array(n2), noise: noise };
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) {
+      i = y * N + x;
+      var xm = Math.max(x - 1, 0), xp = Math.min(x + 1, N - 1), ym = Math.max(y - 1, 0), yp = Math.min(y + 1, N - 1);
+      var gx = (z[y * N + xp] - z[y * N + xm]) / ((xp - xm) * CELL), gy = (z[yp * N + x] - z[ym * N + x]) / ((yp - ym) * CELL);
+      M.dzdx[i] = gx; M.dzdy[i] = gy;
+      var th = Math.atan(Math.sqrt(gx * gx + gy * gy)) * 180 / Math.PI;
+      var lap = Math.abs(z[i] - 0.25 * (z[y * N + xm] + z[y * N + xp] + z[ym * N + x] + z[yp * N + x]));
+      var sandP = smooth(0.52, 0.72, nz3(x / 16 + 7, y / 16, 3)) * 0.9;
+      var rockP = smooth(0.58, 0.78, nz4(x / 13, y / 13 + 9, 3)) * 0.9;
+      var rough = clamp(lap * 0.35 + rockP * 0.7, 0, 1);
+      var missing = 0;
+      MISSING.forEach(function (m) { var dx = x - m[0], dy = y - m[1]; if (dx * dx + dy * dy <= m[2] * m[2]) missing = 1; });
+      var tsig = 1.0 + 5 * noise * (0.4 + rough) + (missing ? 6 : 0);
+      var ps = 1 - Phi((SLOPE_BLOCK - th) / tsig);
+      var pr = 1 - Phi((0.8 - rough) / (0.08 + 0.15 * noise));
+      var pc = clamp(sandP * 0.55 + rockP * 0.8, 0, 0.95);
+      var ph = 1 - (1 - ps) * (1 - pr * 0.8) * (1 - pc * 0.55);
+      var mu = 1 + 2.4 * Math.pow(th / SLOPE_BLOCK, 2) + 1.4 * rough + 2.6 * pc + (missing ? 0.5 : 0);
+      var sd = Math.sqrt(Math.pow(2.4 * 2 * th / (SLOPE_BLOCK * SLOPE_BLOCK) * tsig, 2) + Math.pow(2.6, 2) * pc * (1 - pc) * 0.6 + Math.pow(0.12 + 0.5 * noise, 2) * (0.3 + rough) + (missing ? 1.4 : 0));
+      M.theta[i] = th; M.tsig[i] = tsig; M.rough[i] = rough; M.pc[i] = pc; M.psand[i] = sandP; M.prock[i] = rockP;
+      M.phaz[i] = ph; M.mu[i] = mu; M.sg[i] = sd; M.miss[i] = missing;
+      M.blk[i] = (th > SLOPE_BLOCK || ph > DELTA) ? 1 : 0;
+    }
+    M.dt = distTransform(M.blk);
+    M.start = findFree(M, 7, N - 9, 7); M.goal = findFree(M, N - 9, 8, 7);
+    M.cv0 = new Float32Array(n2); M.blk0 = new Uint8Array(n2);
+    for (i = 0; i < n2; i++) { M.cv0[i] = 1 + Math.pow(M.theta[i] / SLOPE_BLOCK, 2); M.blk0[i] = M.theta[i] > SLOPE_BLOCK ? 1 : 0; }
+    return M;
+  }
+  function distTransform(blk) {
+    var d = new Float32Array(N * N), x, y, i, big = 1e6;
+    for (i = 0; i < d.length; i++) d[i] = blk[i] ? 0 : big;
+    var s2 = 1.4142;
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) { i = y * N + x; var v = d[i];
+      if (x > 0) v = Math.min(v, d[i - 1] + 1); if (y > 0) v = Math.min(v, d[i - N] + 1);
+      if (x > 0 && y > 0) v = Math.min(v, d[i - N - 1] + s2); if (x < N - 1 && y > 0) v = Math.min(v, d[i - N + 1] + s2); d[i] = v; }
+    for (y = N - 1; y >= 0; y--) for (x = N - 1; x >= 0; x--) { i = y * N + x; var w = d[i];
+      if (x < N - 1) w = Math.min(w, d[i + 1] + 1); if (y < N - 1) w = Math.min(w, d[i + N] + 1);
+      if (x < N - 1 && y < N - 1) w = Math.min(w, d[i + N + 1] + s2); if (x > 0 && y < N - 1) w = Math.min(w, d[i + N - 1] + s2); d[i] = w; }
+    return d;
+  }
+  function findFree(M, cx, cy, minDt) {
+    var best = -1, bd = 1e9, x, y, md;
+    for (md = minDt; md >= 1 && best < 0; md--) {
+      for (y = 0; y < N; y++) for (x = 0; x < N; x++) {
+        var i = y * N + x; if (M.blk[i] || M.dt[i] < md) continue;
+        var d = (x - cx) * (x - cx) + (y - cy) * (y - cy); if (d < bd) { bd = d; best = i; }
+      }
+    }
+    return best;
+  }
+
+  /* ===================== planner ===================== */
+  var DIRS = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142], [1, -1, 1.4142], [-1, 1, 1.4142], [-1, -1, 1.4142]];
+  function Heap(cap) { this.k = new Float64Array(cap); this.v = new Int32Array(cap); this.n = 0; }
+  Heap.prototype.push = function (key, val) {
+    var k = this.k, v = this.v, i = this.n++;
+    while (i > 0) { var p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; }
+    k[i] = key; v[i] = val;
+  };
+  Heap.prototype.pop = function () {
+    var k = this.k, v = this.v, top = v[0], key = k[--this.n], val = v[this.n], i = 0, n = this.n;
+    if (n > 0) { for (;;) { var c = 2 * i + 1; if (c >= n) break; if (c + 1 < n && k[c + 1] < k[c]) c++; if (k[c] >= key) break; k[i] = k[c]; v[i] = v[c]; i = c; } k[i] = key; v[i] = val; }
+    return top;
+  };
+  /* o: cv (cost per cell), blk, sg (optional), from, to (-1 = full Dijkstra), drift (k), dt */
+  function search(o) {
+    var n2 = N * N, g = new Float64Array(n2).fill(Infinity), par = new Int32Array(n2).fill(-1), st = new Int32Array(n2), vr = new Float64Array(n2);
+    var heap = new Heap(n2 * 9), cv = o.cv, blk = o.blk, sg = o.sg, drift = o.drift || 0, dt = o.dt;
+    var gx = o.to >= 0 ? o.to % N : 0, gy = o.to >= 0 ? (o.to / N) | 0 : 0, useH = o.to >= 0;
+    var done = new Uint8Array(n2);
+    function hh(i) { if (!useH) return 0; var dx = Math.abs(i % N - gx), dy = Math.abs(((i / N) | 0) - gy); return (Math.max(dx, dy) + 0.4142 * Math.min(dx, dy)) * 1.0; }
+    g[o.from] = 0; heap.push(hh(o.from), o.from);
+    while (heap.n > 0) {
+      var cur = heap.pop(); if (done[cur]) continue; done[cur] = 1;
+      if (cur === o.to) break;
+      var cx = cur % N, cy = (cur / N) | 0, d, nx, ny, nb, ec;
+      for (d = 0; d < 8; d++) {
+        nx = cx + DIRS[d][0]; ny = cy + DIRS[d][1];
+        if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+        nb = ny * N + nx; if (blk[nb] || done[nb]) continue;
+        if (DIRS[d][2] > 1 && (blk[cy * N + nx] || blk[ny * N + cx])) continue;
+        if (drift > 0) { var mg = Math.min(6, 1 + drift * 0.3 * Math.sqrt(st[cur] + 1)); if (dt[nb] <= mg) continue; }
+        ec = 0.5 * (cv[cur] + cv[nb]) * DIRS[d][2];
+        if (g[cur] + ec < g[nb]) {
+          g[nb] = g[cur] + ec; par[nb] = cur; st[nb] = st[cur] + 1;
+          if (sg) vr[nb] = vr[cur] + 0.25 * (sg[cur] * sg[cur] + sg[nb] * sg[nb]) * DIRS[d][2] * DIRS[d][2];
+          heap.push(g[nb] + hh(nb), nb);
+        }
+      }
+    }
+    return { g: g, par: par, vr: vr };
+  }
+  function trace(res, to) {
+    if (!isFinite(res.g[to])) return null;
+    var p = [], c = to; while (c >= 0) { p.push(c); c = res.par[c]; } p.reverse(); return p;
+  }
+  function cvArray(M, alpha) {
+    var f = cvarFactor(alpha), a = new Float32Array(N * N), i;
+    for (i = 0; i < a.length; i++) a[i] = M.mu[i] + f * M.sg[i];
+    return a;
+  }
+  function pathStats(M, p) {
+    var len = 0, ex = 0, ms = 0, mu = 0, v = 0, ok = true, i;
+    for (i = 0; i < p.length; i++) {
+      var c = p[i]; ex += M.phaz[c]; ms = Math.max(ms, M.theta[c]); mu += M.mu[c]; v += M.sg[c] * M.sg[c]; if (M.blk[c] || M.theta[c] > SLOPE_BLOCK) ok = false;
+      if (i > 0) { var a = p[i - 1], dx = Math.abs(c % N - a % N), dy = Math.abs(((c / N) | 0) - ((a / N) | 0)); len += (dx + dy === 2 ? 1.4142 : 1) * CELL; }
+    }
+    return { len: len, exposure: ex, maxSlope: ms, mu: mu, sd: Math.sqrt(v), ok: ok };
+  }
+  function planAll(M, S) {
+    var out = { note: '' }, cv = cvArray(M, S.alpha);
+    var r = search({ cv: cv, blk: M.blk, sg: M.sg, from: M.start, to: M.goal, drift: S.drift, dt: M.dt });
+    var p = trace(r, M.goal);
+    if (!p && S.drift > 0) { r = search({ cv: cv, blk: M.blk, sg: M.sg, from: M.start, to: M.goal, drift: 0, dt: M.dt }); p = trace(r, M.goal); if (p) out.note = 'No path survives that drift margin, so the margin was relaxed.'; }
+    out.path = p; out.cost = r.g[M.goal];
+    var r0 = search({ cv: M.cv0, blk: M.blk0, from: M.start, to: M.goal, drift: 0, dt: M.dt });
+    out.b0 = trace(r0, M.goal);
+    // corridor
+    var ds = search({ cv: cv, blk: M.blk, from: M.start, to: -1, drift: 0, dt: M.dt });
+    var dg = search({ cv: cv, blk: M.blk, from: M.goal, to: -1, drift: 0, dt: M.dt });
+    out.ds = ds; var cs = ds.g[M.goal], cor = new Uint8Array(N * N), i;
+    if (isFinite(cs)) for (i = 0; i < cor.length; i++) if (ds.g[i] + dg.g[i] <= (1 + S.tau) * cs) cor[i] = 1;
+    out.corridor = cor;
+    return out;
+  }
+  function riskCurve(M) {
+    var al = [0, 0.5, 0.8, 0.9, 0.95, 0.99], pts = [];
+    al.forEach(function (a) {
+      var r = search({ cv: cvArray(M, a), blk: M.blk, sg: M.sg, from: M.start, to: M.goal, drift: 0, dt: M.dt }), p = trace(r, M.goal);
+      if (p) { var s = pathStats(M, p); pts.push({ a: a, len: s.len, ex: s.exposure }); }
+    });
+    return pts;
+  }
+
+  /* ===================== rendering of maps ===================== */
+  var STOPS = {
+    cost: [[8, 10, 40], [60, 16, 90], [170, 24, 70], [255, 60, 30], [255, 150, 50], [255, 225, 140]],
+    sigma: [[6, 12, 34], [10, 60, 110], [30, 160, 200], [130, 235, 255], [255, 255, 255]],
+    haz: [[10, 10, 28], [90, 20, 90], [230, 40, 120], [255, 60, 40], [255, 230, 200]],
+    elev: [[30, 12, 14], [120, 50, 34], [200, 110, 60], [240, 190, 120]]
+  };
+  var LABELS = { cost: ['low cost', 'high cost'], sigma: ['sure', 'unsure'], haz: ['safe', 'hazard likely'], elev: ['low', 'high'] };
+  function ramp(stops, t) { t = clamp(t, 0, 1) * (stops.length - 1); var i = Math.min(Math.floor(t), stops.length - 2), f = t - i, a = stops[i], b = stops[i + 1]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; }
+  function gradCss(stops) { return 'linear-gradient(90deg,' + stops.map(function (c, i) { return 'rgb(' + c.join(',') + ') ' + Math.round(i / (stops.length - 1) * 100) + '%'; }).join(',') + ')'; }
+  var off = document.createElement('canvas'); off.width = N; off.height = N;
+  var offCtx = off.getContext('2d');
+  var zmin, zmax;
+  function layerImage(M, layer, withBlock) {
+    var img = offCtx.createImageData(N, N), i, x, y, c, t;
+    if (zmin === undefined || M.zrange !== true) { zmin = 1e9; zmax = -1e9; for (i = 0; i < M.z.length; i++) { zmin = Math.min(zmin, M.z[i]); zmax = Math.max(zmax, M.z[i]); } }
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) {
+      i = y * N + x;
+      if (layer === 'cost') c = ramp(STOPS.cost, (M.mu[i] - 1) / 5.5);
+      else if (layer === 'sigma') c = ramp(STOPS.sigma, M.sg[i] / 1.7);
+      else if (layer === 'haz') c = ramp(STOPS.haz, M.phaz[i]);
+      else { var sh = clamp(0.62 + (-M.dzdx[i] * 0.7 - M.dzdy[i] * 0.7) * 2.2, 0.15, 1.15); c = ramp(STOPS.elev, (M.z[i] - zmin) / (zmax - zmin)); c = [c[0] * sh, c[1] * sh, c[2] * sh]; }
+      if (withBlock && M.blk[i]) { c = [c[0] * 0.45 + 255 * 0.55, c[1] * 0.45 + 40 * 0.55, c[2] * 0.45 + 28 * 0.55]; if ((x + y) % 4 < 2) c = [c[0] * 0.8, c[1] * 0.8, c[2] * 0.8]; }
+      if (M.miss[i]) { var s = ((x + y) % 4 < 2) ? 0.5 : 0.15; c = [c[0] * (1 - s) + 210 * s, c[1] * (1 - s) + 215 * s, c[2] * (1 - s) + 235 * s]; }
+      var o = i * 4; img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+    }
+    return img;
+  }
+  function paintBase(cv, M, layer, withBlock) {
+    var ctx = cv.getContext('2d'); offCtx.putImageData(layerImage(M, layer, withBlock), 0, 0);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(off, 0, 0, cv.width, cv.height); return ctx;
+  }
+  function drawPath(ctx, cv, p, color, width, dash, glow) {
+    if (!p || p.length < 2) return; var s = cv.width / N; ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 12; }
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.beginPath();
+    p.forEach(function (c, k) { var x = (c % N + 0.5) * s, y = (((c / N) | 0) + 0.5) * s; if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y); }); ctx.stroke(); ctx.restore();
+  }
+  function marker(ctx, cv, cell, fill, label) {
+    var s = cv.width / N, x = (cell % N + 0.5) * s, y = (((cell / N) | 0) + 0.5) * s;
+    ctx.save(); ctx.fillStyle = fill; ctx.strokeStyle = '#04050b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#04050b'; ctx.font = '800 12px Sarpanch, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + 0.5); ctx.restore();
+  }
+
+  /* ===================== state and wiring ===================== */
+  var S = { noise: 0.35, alpha: 0.9, drift: 1, tau: 0.06, layer: 'cost', beta: 0.35, wig: 0.3, sel: -1 };
+  var M, P, curve, T, UNR = [];
+
+  var TARGETS = [
+    { name: 'Layered rim scarp', pos: [57, 18], h: [0.78, 0.10], ice: [0.55, 0.18], geo: [0.88, 0.08] },
+    { name: 'Fan delta lobe', pos: [70, 38], h: [0.84, 0.14], ice: [0.30, 0.15], geo: [0.72, 0.12] },
+    { name: 'Polygonal ground', pos: [38, 14], h: [0.52, 0.12], ice: [0.80, 0.20], geo: [0.60, 0.12] },
+    { name: 'Crater floor clays', pos: [43, 52], h: [0.90, 0.09], ice: [0.28, 0.12], geo: [0.66, 0.10] },
+    { name: 'Dark dune margin', pos: [22, 48], h: [0.35, 0.10], ice: [0.40, 0.22], geo: [0.50, 0.15] },
+    { name: 'Fresh impact ejecta', pos: [48, 70], h: [0.46, 0.16], ice: [0.72, 0.26], geo: [0.58, 0.14] },
+    { name: 'Boulder-free plain', pos: [78, 78], h: [0.22, 0.08], ice: [0.20, 0.10], geo: [0.30, 0.08] },
+    { name: 'Hydrated knoll', pos: [14, 22], h: [0.70, 0.20], ice: [0.46, 0.24], geo: [0.74, 0.18] }
+  ];
+  var W0 = { h: 0.40, ice: 0.35, geo: 0.25 };
+
+  function evidence(t, mu, sd, i) {
+    return 'Hydration ' + t.h[0].toFixed(2) + ' (sim), ice prior ' + t.ice[0].toFixed(2) + ' (sim), geology ' + t.geo[0].toFixed(2) + '; slope at site ' + M.theta[t.cell].toFixed(0) + '°; reach cost ' + mu.toFixed(0) + ' ± ' + sd.toFixed(0) + '.';
+  }
+  function rankTargets() {
+    var rng = mulberry32(2026), D = 1000, list = [];
+    TARGETS.forEach(function (t) { t.cell = findFree(M, t.pos[0], t.pos[1], 3); });
+    var cvA = P.ds; // distance field from start with CVaR(alpha) costs
+    var cvv = search({ cv: cvArray(M, S.alpha), blk: M.blk, sg: M.sg, from: M.start, to: -1, drift: 0, dt: M.dt });
+    TARGETS.forEach(function (t) { var g = cvv.g[t.cell]; t.reach = isFinite(g); t.am = g; t.asd = Math.sqrt(cvv.vr[t.cell]); if (t.reach) list.push(t); });
+    UNR = TARGETS.filter(function (t) { return !t.reach; }).map(function (t) { return t.name; });
+    var amax = 1; list.forEach(function (t) { amax = Math.max(amax, t.am); });
+    var nz = 0.4 + S.noise * 1.6, ws = 0.1 + 0.5 * S.wig, k = list.length, V = list.map(function () { return new Float32Array(D); }), R = list.map(function () { return new Float32Array(D); });
+    var d, i, j;
+    for (d = 0; d < D; d++) {
+      var w = [W0.h * Math.exp(ws * gauss(rng)), W0.ice * Math.exp(ws * gauss(rng)), W0.geo * Math.exp(ws * gauss(rng))], sw = w[0] + w[1] + w[2];
+      var vals = list.map(function (t, idx) {
+        var h = clamp(t.h[0] + t.h[1] * nz * gauss(rng), 0, 1), ic = clamp(t.ice[0] + t.ice[1] * nz * gauss(rng), 0, 1), ge = clamp(t.geo[0] + t.geo[1] * nz * gauss(rng), 0, 1);
+        var acc = Math.max(0, t.am + t.asd * gauss(rng)) / amax;
+        return (w[0] * h + w[1] * ic + w[2] * ge) / sw - S.beta * acc;
+      });
+      for (i = 0; i < k; i++) V[i][d] = vals[i];
+      for (i = 0; i < k; i++) { var r = 1; for (j = 0; j < k; j++) if (vals[j] > vals[i]) r++; R[i][d] = r; }
+    }
+    function pct(arr, p) { var a = Array.prototype.slice.call(arr).sort(function (x, y) { return x - y; }); return a[Math.min(a.length - 1, Math.floor(p * a.length))]; }
+    list.forEach(function (t, i) {
+      var sum = 0, top3 = 0, q; for (q = 0; q < D; q++) { sum += V[i][q]; if (R[i][q] <= 3) top3++; }
+      t.v = sum / D; t.vlo = pct(V[i], 0.05); t.vhi = pct(V[i], 0.95); t.rlo = pct(R[i], 0.05); t.rhi = pct(R[i], 0.95); t.p3 = top3 / D;
+      var vs = 0; for (q = 0; q < D; q++) vs += Math.pow(V[i][q] - t.v, 2); t.vsd = Math.sqrt(vs / D);
+    });
+    list.sort(function (a, b) { return b.v - a.v; });
+    return list;
+  }
+
+  function renderMap1() {
+    var cv = $('#map1'), ctx = paintBase(cv, M, S.layer, true); var s = cv.width / N;
+    marker(ctx, cv, M.start, '#3fd2ff', 'S'); marker(ctx, cv, M.goal, '#ffd27a', 'G');
+    $('#lg-bar').style.background = gradCss(STOPS[S.layer]); $('#lg-lo').textContent = LABELS[S.layer][0]; $('#lg-hi').textContent = LABELS[S.layer][1];
+    $$('#layers button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.layer === S.layer ? 'true' : 'false'); });
+  }
+  function renderMap2() {
+    var cv = $('#map2'), ctx = paintBase(cv, M, 'cost', true), s = cv.width / N, i;
+    ctx.save(); ctx.fillStyle = 'rgba(255,170,60,0.28)';
+    for (i = 0; i < P.corridor.length; i++) if (P.corridor[i]) ctx.fillRect((i % N) * s, ((i / N) | 0) * s, s + 0.5, s + 0.5); ctx.restore();
+    drawPath(ctx, cv, P.b0, '#bfe9ff', 2.5, [7, 6]);
+    drawPath(ctx, cv, P.path, '#ffd27a', 4, [], 'rgba(255,200,90,.9)');
+    marker(ctx, cv, M.start, '#3fd2ff', 'S'); marker(ctx, cv, M.goal, '#ffd27a', 'G');
+  }
+  function fmt(x, d) { return isFinite(x) ? x.toFixed(d) : 'n/a'; }
+  function renderStats() {
+    var a = P.path ? pathStats(M, P.path) : null, b = P.b0 ? pathStats(M, P.b0) : null;
+    function cell(s, k, d) { return s ? fmt(s[k], d) : 'no path'; }
+    var rows = [
+      ['Length (m)', cell(a, 'len', 0), cell(b, 'len', 0)],
+      ['Hazard exposure, ΣP', cell(a, 'exposure', 2), cell(b, 'exposure', 2)],
+      ['Peak slope (°)', cell(a, 'maxSlope', 1), cell(b, 'maxSlope', 1)],
+      ['Cost μ ± σ', a ? fmt(a.mu, 0) + ' ± ' + fmt(a.sd, 0) : 'no path', b ? fmt(b.mu, 0) + ' ± ' + fmt(b.sd, 0) : 'no path'],
+      ['Hard-hazard check', a ? (a.ok ? '<span class="ok">✓ clear</span>' : '<span class="bad">✗ crosses</span>') : 'n/a', b ? (b.ok ? '<span class="ok">✓ clear</span>' : '<span class="bad">✗ crosses</span>') : 'n/a']
+    ];
+    $('#stats').innerHTML = rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="ours">' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('');
+    var ro = $('#readout');
+    if (a && b) {
+      var dl = (a.len / b.len - 1) * 100, de = b.exposure > 0 ? (1 - a.exposure / b.exposure) * 100 : 0;
+      ro.innerHTML = 'Against the baseline, this setting drives <b>' + Math.abs(dl).toFixed(0) + '% ' + (dl >= 0 ? 'further' : 'less') + '</b> and carries <b>' + Math.abs(de).toFixed(0) + '% ' + (de >= 0 ? 'less' : 'more') + ' hazard exposure</b>.' + (P.note ? ' ' + P.note : '');
+    } else ro.textContent = P.note || 'No route exists at this setting. Lower the risk dial.';
+  }
+  function renderCurve() {
+    var cv = $('#curve'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height, pad = { l: 56, r: 18, t: 16, b: 40 };
+    ctx.clearRect(0, 0, W, H); if (!curve.length) return;
+    var xs = curve.map(function (p) { return p.len; }), ys = curve.map(function (p) { return p.ex; });
+    var x0 = Math.min.apply(null, xs) * 0.98, x1 = Math.max.apply(null, xs) * 1.02, y0 = 0, y1 = Math.max.apply(null, ys) * 1.12 || 1;
+    function X(v) { return pad.l + (v - x0) / (x1 - x0 || 1) * (W - pad.l - pad.r); } function Y(v) { return H - pad.b - (v - y0) / (y1 - y0 || 1) * (H - pad.t - pad.b); }
+    ctx.strokeStyle = 'rgba(255,60,40,.22)'; ctx.fillStyle = '#9aa0bd'; ctx.font = '500 13px Sarpanch, sans-serif'; ctx.lineWidth = 1; var k;
+    for (k = 0; k <= 4; k++) { var yy = y0 + (y1 - y0) * k / 4, py = Y(yy); ctx.beginPath(); ctx.moveTo(pad.l, py); ctx.lineTo(W - pad.r, py); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(yy.toFixed(1), pad.l - 8, py + 4); }
+    for (k = 0; k <= 4; k++) { var xx = x0 + (x1 - x0) * k / 4, px = X(xx); ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, H - pad.b); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(xx.toFixed(0), px, H - pad.b + 16); }
+    ctx.textAlign = 'center'; ctx.fillText('path length (m)', (pad.l + W - pad.r) / 2, H - 6);
+    ctx.save(); ctx.translate(14, (pad.t + H - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('hazard exposure', 0, 0); ctx.restore();
+    ctx.strokeStyle = '#ff8a2b'; ctx.lineWidth = 2; ctx.beginPath(); curve.forEach(function (p, i) { if (i) ctx.lineTo(X(p.len), Y(p.ex)); else ctx.moveTo(X(p.len), Y(p.ex)); }); ctx.stroke();
+    curve.forEach(function (p) { ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(X(p.len), Y(p.ex), 4, 0, 6.2832); ctx.fill(); ctx.fillStyle = '#9aa0bd'; ctx.textAlign = 'left'; ctx.fillText('α' + p.a, X(p.len) + 7, Y(p.ex) - 7); });
+    if (P.path) { var s = pathStats(M, P.path); ctx.strokeStyle = '#ff2b1c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(X(s.len), Y(s.exposure), 9, 0, 6.2832); ctx.stroke(); }
+  }
+  function renderTargets() {
+    var list = T, vmin = 1e9, vmax = -1e9; list.forEach(function (t) { vmin = Math.min(vmin, t.vlo); vmax = Math.max(vmax, t.vhi); });
+    var span = vmax - vmin || 1, pad = span * 0.04; vmin -= pad; vmax += pad; span = vmax - vmin;
+    function pos(v) { return ((v - vmin) / span * 100).toFixed(1) + '%'; }
+    $('#rows').innerHTML = list.map(function (t, i) {
+      var tie = ''; var nx = list[i + 1]; if (nx && Math.abs(t.v - nx.v) < 0.5 * (t.vsd + nx.vsd)) tie = ' <span class="tie">tie with #' + (i + 2) + '</span>';
+      return '<div class="row rv' + (S.sel === i ? ' sel open' : '') + '" data-i="' + i + '" tabindex="0" role="button" aria-label="Target ' + (i + 1) + ' ' + t.name + '"><span class="plus" aria-hidden="true">+</span><div class="rk">' + (i + 1) + '</div><div>' +
+        '<div class="rname"><strong>' + t.name + '</strong><small>rank ' + t.rlo + (t.rlo === t.rhi ? '' : ' to ' + t.rhi) + '</small></div>' +
+        '<div class="hid"><div><div class="ev">' + evidence(t, t.am, t.asd, i) + '</div></div></div>' +
+        '<div class="track"><div class="whisk" style="left:' + pos(t.vlo) + ';width:calc(' + pos(t.vhi) + ' - ' + pos(t.vlo) + ')"></div><div class="capL" style="left:' + pos(t.vlo) + '"></div><div class="capR" style="left:' + pos(t.vhi) + '"></div><div class="mean" style="left:' + pos(t.v) + '"></div></div>' +
+        '<div class="meta"><span>value <b>' + t.v.toFixed(2) + '</b> (90%: ' + t.vlo.toFixed(2) + ' to ' + t.vhi.toFixed(2) + ')</span><span>P(top 3) <b>' + Math.round(t.p3 * 100) + '%</b></span>' + tie + '</div></div></div>';
+    }).join('') + '<p class="tiny">Gold tick is the mean value, the bar is its 90% range, from 1000 resamples.</p>' + (UNR.length ? '<p class="tiny" style="color:var(--ember)">Not reachable at this risk setting: ' + UNR.join(', ') + '.</p>' : '');
+    $$('#rows .row').forEach(function (el) { el.addEventListener('click', function () { S.sel = +el.dataset.i; renderTargets(); renderMap3(); }); el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } }); });
+  }
+  function renderMap3() {
+    var cv = $('#map3'), ctx = paintBase(cv, M, 'elev', true), s = cv.width / N;
+    drawPath(ctx, cv, P.path, 'rgba(255,210,122,.75)', 3, [4, 5]);
+    marker(ctx, cv, M.start, '#3fd2ff', 'S');
+    T.forEach(function (t, i) {
+      var x = (t.cell % N + 0.5) * s, y = (((t.cell / N) | 0) + 0.5) * s, r = 12 + (t.rhi - t.rlo) * 5;
+      ctx.save(); ctx.strokeStyle = S.sel === i ? '#ffffff' : '#ff3fa0'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke(); ctx.restore();
+      marker(ctx, cv, t.cell, S.sel === i ? '#ffffff' : '#ff8a2b', String(i + 1));
+    });
+  }
+  function traceCell(ev) {
+    var cv = ev.currentTarget, r = cv.getBoundingClientRect(), x = Math.floor((ev.clientX - r.left) / r.width * N), y = Math.floor((ev.clientY - r.top) / r.height * N), i = y * N + x;
+    if (x < 0 || y < 0 || x >= N || y >= N) return;
+    $('#trace').innerHTML = 'Cell <span>(' + x + ', ' + y + ')</span> · slope <span>' + M.theta[i].toFixed(1) + '° ± ' + M.tsig[i].toFixed(1) + '</span> · roughness <span>' + M.rough[i].toFixed(2) + '</span><br>' +
+      'sand <span>' + M.psand[i].toFixed(2) + '</span> · rock field <span>' + M.prock[i].toFixed(2) + '</span> · hazard probability <span>' + M.phaz[i].toFixed(2) + '</span><br>' +
+      'cost <span>' + M.mu[i].toFixed(2) + ' ± ' + M.sg[i].toFixed(2) + '</span> · ' + (M.blk[i] ? '<span style="color:var(--mars)">hard blocked</span>' : 'open') + (M.miss[i] ? ' · <span>simulated missing data</span>' : '');
+  }
+
+  var pending = false;
+  function recompute(full) {
+    if (full) { M = buildModel(S.noise); }
+    P = planAll(M, S); T = rankTargets(); if (full) curve = riskCurve(M);
+    renderMap1(); renderMap2(); renderStats(); renderCurve(); renderTargets(); renderMap3();
+  }
+  function schedule(full) { var f = full || pending === 'full'; pending = f ? 'full' : true; if (schedule.t) return; schedule.t = requestAnimationFrame(function () { schedule.t = 0; var ff = pending === 'full'; pending = false; recompute(ff); }); }
+
+  function setOut() {
+    $$('[data-out="noise"]').forEach(function (e) { e.textContent = S.noise.toFixed(2); });
+    $('#alpha-out').textContent = (S.alpha < 0.3 ? 'bold ' : S.alpha > 0.8 ? 'cautious ' : '') + S.alpha.toFixed(2);
+    $('#drift-out').textContent = S.drift.toFixed(1); $('#tau-out').textContent = Math.round(S.tau * 100) + '%';
+    $('#beta-out').textContent = S.beta.toFixed(2); $('#wig-out').textContent = S.wig.toFixed(2);
+  }
+  function wire() {
+    $$('[data-bind="noise"]').forEach(function (el) { el.addEventListener('input', function () { S.noise = +el.value; $$('[data-bind="noise"]').forEach(function (o) { o.value = S.noise; }); setOut(); schedule(true); }); });
+    $('#alpha').addEventListener('input', function (e) { S.alpha = +e.target.value; setOut(); schedule(false); });
+    $('#drift').addEventListener('input', function (e) { S.drift = +e.target.value; setOut(); schedule(false); });
+    $('#tau').addEventListener('input', function (e) { S.tau = +e.target.value; setOut(); schedule(false); });
+    $('#beta').addEventListener('input', function (e) { S.beta = +e.target.value; setOut(); schedule(false); });
+    $('#wig').addEventListener('input', function (e) { S.wig = +e.target.value; setOut(); schedule(false); });
+    $$('#layers button').forEach(function (b) { b.addEventListener('click', function () { S.layer = b.dataset.layer; renderMap1(); }); });
+    ['#map1', '#map2', '#map3'].forEach(function (id) { $(id).addEventListener('click', traceCell); });
+    $('#map1').addEventListener('click', traceCell);
+  }
+
+  /* ===================== routing ===================== */
+  var home = $('#view-home'), about = $('#view-about'), navAbout = $('#nav-about');
+  function route() {
+    var h = location.hash.slice(1), isAbout = h === 'about';
+    home.hidden = isAbout; about.hidden = !isAbout; navAbout.classList.toggle('on', isAbout);
+    if (isAbout) window.scrollTo(0, 0);
+    else if (h && document.getElementById(h)) document.getElementById(h).scrollIntoView();
+    else if (!h) window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ===================== three.js sky ===================== */
+  var GL = { ok: false };
+  function glTexture(draw, size) { var c = document.createElement('canvas'); c.width = c.height = size; draw(c.getContext('2d'), size); var t = new THREE.CanvasTexture(c); return t; }
+  function initGL() {
+    var canvas = $('#gl');
+    if (typeof THREE === 'undefined') return;
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0x02030a, 1); renderer.autoClear = false;
+    var rnd = mulberry32(99), i, j;
+
+    /* ---------- background: a swirling vortex with nebula edges (full-screen shader) ---------- */
+    var bgScene = new THREE.Scene(), bgCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    var bgMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uC: { value: new THREE.Vector2(0.4, -0.1) } },
+      vertexShader: 'void main(){ gl_Position=vec4(position.xy,0.0,1.0); }',
+      fragmentShader: [
+        'uniform float uTime; uniform vec2 uRes; uniform vec2 uC;',
+        'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }',
+        'float noise(vec2 p){ vec2 i=floor(p); vec2 f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }',
+        'float fbm(vec2 p){ float a=.5,s=0.; for(int i=0;i<5;i++){ s+=a*noise(p); p=p*2.03+vec2(7.1,3.7); a*=.5; } return s; }',
+        'void main(){',
+        ' vec2 uv=(gl_FragCoord.xy-0.5*uRes)/uRes.y;',
+        ' vec2 d=uv-uC; float r=length(d); float a=atan(d.y,d.x);',
+        ' float sw=a+2.1/(r+0.32)+uTime*0.035;',
+        ' float s1=fbm(vec2(sw*1.7, r*2.6-uTime*0.02));',
+        ' float s2=fbm(vec2(sw*4.2+3.0, r*6.0+uTime*0.015));',
+        ' float flow=smoothstep(.28,.82,s1);',
+        ' vec3 indigo=vec3(.03,.025,.10); vec3 purple=vec3(.20,.08,.38); vec3 teal=vec3(.04,.30,.40); vec3 gold=vec3(1.0,.70,.26);',
+        ' vec3 col=mix(indigo,purple,flow);',
+        ' col=mix(col,teal,smoothstep(.40,.88,s2)*smoothstep(1.5,.25,r)*.85);',
+        ' float rim=exp(-pow((r-.40)*6.0,2.0)); col+=gold*rim*pow(s1,2.0)*1.5;',
+        ' col+=vec3(.9,.35,.7)*exp(-pow((r-.62)*5.0,2.0))*pow(s2,3.0)*.9;',
+        ' col=mix(col,vec3(0.0),smoothstep(.325,.295,r));',
+        ' col+=vec3(1.0,.62,.28)*exp(-pow((r-.332)*34.0,2.0))*.55;',
+        ' float n=fbm(uv*2.4+vec2(uTime*.008,0.0)); float edge=smoothstep(.47,.52,n)-smoothstep(.52,.60,n);',
+        ' float far=smoothstep(.45,1.1,r);',
+        ' col+=(vec3(.22,.28,.75)*edge*.38+vec3(.75,.32,.1)*edge*.2)*far;',
+        ' col*=.62;',
+        ' col*=1.0-smoothstep(.55,1.5,length(uv))*.65;',
+        ' gl_FragColor=vec4(col,1.0); }'
+      ].join('\n'),
+      depthTest: false, depthWrite: false
+    });
+    bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat));
+
+    var scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(48, 1, 0.1, 400); camera.position.set(0, 0.3, 10);
+    var world = new THREE.Group(); scene.add(world);
+
+    // quiet star dust
+    var sc = 1500, sp = new Float32Array(sc * 3), scl = new Float32Array(sc * 3), col = new THREE.Color();
+    for (i = 0; i < sc; i++) {
+      var u = rnd() * 2 - 1, th = rnd() * 6.2832, rr = 30 + rnd() * 70, q = Math.sqrt(1 - u * u);
+      sp[i * 3] = rr * q * Math.cos(th); sp[i * 3 + 1] = rr * u; sp[i * 3 + 2] = rr * q * Math.sin(th);
+      col.setHSL(rnd() < 0.25 ? 0.6 : 0.08, 0.3, 0.45 + rnd() * 0.3); scl[i * 3] = col.r; scl[i * 3 + 1] = col.g; scl[i * 3 + 2] = col.b;
+    }
+    var sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.BufferAttribute(scl, 3));
+    var stars = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.17, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.8, depthWrite: false }));
+    scene.add(stars);
+
+    // gold glitter drifting in the middle distance
+    var gc = 700, gp = new Float32Array(gc * 3);
+    for (i = 0; i < gc; i++) { gp[i * 3] = (rnd() - 0.5) * 40; gp[i * 3 + 1] = (rnd() - 0.5) * 22; gp[i * 3 + 2] = -3 - rnd() * 14; }
+    var gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.BufferAttribute(gp, 3));
+    var glitter = new THREE.Points(gg, new THREE.PointsMaterial({ size: 0.07, color: 0xffb347, sizeAttenuation: true, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(glitter);
+
+    // cross-flare star, as in the nebula reference
+    var flareTex = (function () {
+      var c = document.createElement('canvas'); c.width = c.height = 256; var x = c.getContext('2d');
+      var g = x.createRadialGradient(128, 128, 0, 128, 128, 40); g.addColorStop(0, 'rgba(255,240,255,1)'); g.addColorStop(0.3, 'rgba(190,150,255,.6)'); g.addColorStop(1, 'rgba(120,80,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+      var vl = x.createLinearGradient(0, 0, 0, 256); vl.addColorStop(0, 'rgba(255,90,60,0)'); vl.addColorStop(0.5, 'rgba(255,120,80,.95)'); vl.addColorStop(1, 'rgba(255,90,60,0)'); x.fillStyle = vl; x.fillRect(127, 0, 2, 256);
+      var hl = x.createLinearGradient(0, 0, 256, 0); hl.addColorStop(0, 'rgba(255,90,60,0)'); hl.addColorStop(0.5, 'rgba(255,120,80,.95)'); hl.addColorStop(1, 'rgba(255,90,60,0)'); x.fillStyle = hl; x.fillRect(0, 127, 256, 2);
+      return new THREE.CanvasTexture(c);
+    })();
+    var flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85 }));
+    flare.position.set(-5.5, 3.6, -9); flare.scale.set(7, 7, 1); scene.add(flare);
+
+    /* ---------- Mars, as before ---------- */
+    var marsGroup = new THREE.Group(); world.add(marsGroup);
+    var vs = 'varying vec3 vN; varying vec3 vO; varying vec3 vV; void main(){ vO=position; vN=normalize(normalMatrix*normal); vec4 mv=modelViewMatrix*vec4(position,1.0); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }';
+    var fs = [
+      'varying vec3 vN; varying vec3 vO; varying vec3 vV;',
+      'float hash(vec3 p){ p=fract(p*0.3183099+.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }',
+      'float vn(vec3 x){ vec3 i=floor(x); vec3 f=fract(x); f=f*f*(3.0-2.0*f);',
+      ' return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),',
+      '  mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z); }',
+      'float fbm(vec3 p){ float a=.5,s=0.; for(int i=0;i<6;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }',
+      'void main(){',
+      ' vec3 o=normalize(vO);',
+      ' float n=fbm(o*1.7); float m=fbm(o*5.2+3.0); float d=fbm(o*0.9+9.0);',
+      ' vec3 c=mix(vec3(.16,.035,.03),vec3(.74,.22,.11),smoothstep(.25,.7,n));',
+      ' c=mix(c,vec3(1.0,.52,.26),smoothstep(.55,.85,m)*.55);',
+      ' c*=.55+.7*d;',
+      ' float cap=smoothstep(.86,.95,abs(o.y)); c=mix(c,vec3(1.0,.86,.82),cap*.8);',
+      ' vec3 L=normalize(vec3(-.55,.35,.75)); float lam=max(dot(normalize(vN),L),0.);',
+      ' c*=.08+lam*1.2;',
+      ' float fr=pow(1.0-max(dot(normalize(vN),vV),0.),3.0); c+=vec3(1.0,.34,.2)*fr*.7*(.25+lam);',
+      ' gl_FragColor=vec4(c,1.0); }'
+    ].join('\n');
+    var mars = new THREE.Mesh(new THREE.SphereGeometry(2.2, 64, 64), new THREE.ShaderMaterial({ vertexShader: vs, fragmentShader: fs }));
+    marsGroup.add(mars);
+    var atm = new THREE.Mesh(new THREE.SphereGeometry(2.5, 48, 48), new THREE.ShaderMaterial({
+      vertexShader: 'varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'varying vec3 vN; void main(){ float i=pow(0.72-dot(vN,vec3(0,0,1.0)),3.0); gl_FragColor=vec4(1.0,.38,.2,1.0)*clamp(i,0.,1.)*1.1; }',
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+    marsGroup.add(atm);
+    function orbit(radius, tilt, color) {
+      var pts = [], k; for (k = 0; k <= 160; k++) { var t = k / 160 * 6.2832; pts.push(new THREE.Vector3(Math.cos(t) * radius, 0, Math.sin(t) * radius)); }
+      var g = new THREE.BufferGeometry().setFromPoints(pts), l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: color, dashSize: 0.16, gapSize: 0.12, transparent: true, opacity: 0.7 }));
+      l.computeLineDistances(); var grp = new THREE.Group(); grp.rotation.x = tilt; grp.add(l); marsGroup.add(grp); return grp;
+    }
+    var o1 = orbit(3.5, 0.55, 0xff2b1c), o2 = orbit(4.8, -0.35, 0xff8a2b);
+    var phobos = new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 20), new THREE.MeshBasicMaterial({ color: 0xff7a55 })); o1.add(phobos);
+    var deimos = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffc9a8 })); o2.add(deimos);
+
+    /* ---------- two wire-web hands that reach toward each other around Mars ---------- */
+    function capsulePoints(out, a, b, r0, r1, n, r) {
+      for (var k = 0; k < n; k++) {
+        var t = r(), ang = r() * 6.2832, rad = r0 + (r1 - r0) * t;
+        var dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        var ux = dx / len, uy = dy / len, uz = dz / len;
+        var hx = 0, hy = 0, hz = 1; if (Math.abs(uz) > 0.9) { hx = 1; hz = 0; }
+        var vx = uy * hz - uz * hy, vy = uz * hx - ux * hz, vz = ux * hy - uy * hx, vl = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1; vx /= vl; vy /= vl; vz /= vl;
+        var wx = uy * vz - uz * vy, wy = uz * vx - ux * vz, wz = ux * vy - uy * vx;
+        out.push([a[0] + dx * t + (vx * Math.cos(ang) + wx * Math.sin(ang)) * rad, a[1] + dy * t + (vy * Math.cos(ang) + wy * Math.sin(ang)) * rad, a[2] + dz * t + (vz * Math.cos(ang) + wz * Math.sin(ang)) * rad]);
+      }
+    }
+    function buildHand(seed) {
+      var r = mulberry32(seed), P = [];
+      capsulePoints(P, [-6, 0, 0], [0, 0, 0], 0.26, 0.36, 200, r);          // forearm
+      capsulePoints(P, [0, -0.46, 0], [0, 0.46, 0], 0.14, 0.14, 46, r);     // wrist
+      capsulePoints(P, [0.55, -0.5, 0], [0.55, 0.5, 0], 0.16, 0.16, 56, r); // palm middle
+      capsulePoints(P, [1.1, -0.46, 0], [1.1, 0.46, 0], 0.14, 0.14, 50, r); // knuckles
+      var fy = [-0.36, -0.12, 0.12, 0.36], fa = [-0.3, -0.1, 0.06, 0.24], fl = [0.85, 1.1, 1.05, 0.8], f, k3;
+      for (f = 0; f < 4; f++) {
+        var x0 = 1.1, y0 = fy[f], ang = fa[f], segs = [0.45, 0.32, 0.23];
+        for (k3 = 0; k3 < 3; k3++) {
+          var L = fl[f] * segs[k3], x1 = x0 + L * Math.cos(ang), y1 = y0 + L * Math.sin(ang);
+          capsulePoints(P, [x0, y0, 0], [x1, y1, 0.03 * k3], 0.09 - k3 * 0.014, 0.08 - k3 * 0.014, 30, r); x0 = x1; y0 = y1; ang += 0.24;
+        }
+      }
+      var tx0 = 0.3, ty0 = -0.5, tang = -0.95, k4;
+      for (k4 = 0; k4 < 2; k4++) { var tl = k4 ? 0.42 : 0.55, tx1 = tx0 + tl * Math.cos(tang), ty1 = ty0 + tl * Math.sin(tang); capsulePoints(P, [tx0, ty0, 0.04], [tx1, ty1, 0.06], 0.11 - k4 * 0.02, 0.1 - k4 * 0.02, 38, r); tx0 = tx1; ty0 = ty1; tang += 0.45; }
+      var tipX = -1e9, a, b2; for (a = 0; a < P.length; a++) tipX = Math.max(tipX, P[a][0]);
+      var seg = [], n = P.length;
+      for (a = 0; a < n; a++) {
+        var best = [];
+        for (b2 = 0; b2 < n; b2++) { if (a === b2) continue; var dx = P[a][0] - P[b2][0], dy = P[a][1] - P[b2][1], dz = P[a][2] - P[b2][2], dd = dx * dx + dy * dy + dz * dz; if (dd < 0.1) best.push([dd, b2]); }
+        best.sort(function (p1, p2) { return p1[0] - p2[0]; });
+        for (var m = 0; m < Math.min(3, best.length); m++) { var q2 = P[best[m][1]]; seg.push(P[a][0], P[a][1], P[a][2], q2[0], q2[1], q2[2]); }
+      }
+      var lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg), 3));
+      var flat = new Float32Array(n * 3); for (a = 0; a < n; a++) { flat[a * 3] = P[a][0]; flat[a * 3 + 1] = P[a][1]; flat[a * 3 + 2] = P[a][2]; }
+      var pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(flat, 3));
+      var grp = new THREE.Group();
+      grp.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })));
+      grp.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })));
+      grp.userData.tipX = tipX; return grp;
+    }
+    var handA = buildHand(5), handB = buildHand(8);
+    var handBox = new THREE.Group(); marsGroup.add(handBox);
+    var holderA = new THREE.Group(), holderB = new THREE.Group(); holderA.add(handA); holderB.add(handB); handBox.add(holderA); handBox.add(holderB);
+    var HS = 1.4; handA.scale.set(HS, HS, HS); handB.scale.set(HS, -HS, HS);
+    var spark = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
+    spark.scale.set(1.6, 1.6, 1); handBox.add(spark);
+    var ANG = 0.88, DX = Math.cos(ANG), DY = Math.sin(ANG), TIP = handA.userData.tipX * HS, MX = -2.1, MY = 1.7, GAP = 0.28;
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeIn(t) { return t * t * t; }
+
+    var mx = 0, my = 0, tx = 0, ty = 0;
+    window.addEventListener('pointermove', function (e) { tx = e.clientX / window.innerWidth - 0.5; ty = e.clientY / window.innerHeight - 0.5; }, { passive: true });
+    function size() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); var pr = renderer.getPixelRatio(); bgMat.uniforms.uRes.value.set(w * pr, h * pr); }
+    window.addEventListener('resize', size); size();
+
+    var t0 = performance.now(), clock = new THREE.Clock(), tt = 0, vis = true, introT = reduceMotion ? 1 : 0, bgc = new THREE.Vector2(0.4, -0.1);
+    document.addEventListener('visibilitychange', function () { vis = !document.hidden; });
+    function frame() {
+      requestAnimationFrame(frame); if (!vis) return;
+      var dt = Math.min(clock.getDelta(), 0.05); if (!reduceMotion) { tt += dt; introT = Math.min(1, (performance.now() - t0) / 3200); }
+      var maxs = document.documentElement.scrollHeight - window.innerHeight, isAbout = !about.hidden;
+      var p = isAbout ? 0.35 : (maxs > 0 ? window.scrollY / maxs : 0);
+      mx += (tx - mx) * 0.05; my += (ty - my) * 0.05;
+      var portrait = camera.aspect < 0.85;
+      var hw = Math.tan(0.4189) * 10 * camera.aspect, hh = Math.tan(0.4189) * 10, ms = clamp(hw / 5.4, 0.5, 1);
+      var heroX = portrait ? hw * 0.15 : hw * 0.52, heroY = portrait ? -2.9 : -1.0, endX = portrait ? -hw * 0.1 : -hw * 0.48, endY = portrait ? 1.8 : -0.4;
+      marsGroup.position.x += ((heroX + (endX - heroX) * smooth(0, 0.6, p)) - marsGroup.position.x) * 0.06;
+      marsGroup.position.y += ((heroY + (endY - heroY) * smooth(0, 0.6, p)) - marsGroup.position.y) * 0.06;
+      marsGroup.scale.setScalar(ms);
+      canvas.style.opacity = (1 - 0.6 * smooth(0.01, 0.12, p)).toFixed(3);
+      mars.rotation.y = tt * 0.06;
+      o1.rotation.y = tt * 0.05; o2.rotation.y = -tt * 0.03;
+      phobos.position.set(Math.cos(tt * 0.5) * 3.5, 0, Math.sin(tt * 0.5) * 3.5); deimos.position.set(Math.cos(tt * 0.28 + 2) * 4.8, 0, Math.sin(tt * 0.28 + 2) * 4.8);
+
+      // hands: reach in after load, fall back out as you scroll
+      var delay = clamp((introT * 3.2 - 0.5) / 2.7, 0, 1), reach = easeOut(delay) * (1 - easeIn(smooth(0.0, 0.14, p)));
+      var back = 14 * (1 - reach), fall = (1 - reach) * 3.0, flutter = Math.sin(tt * 1.3) * 0.02;
+      holderA.position.set(MX - DX * (TIP + GAP) - DX * back, MY - DY * (TIP + GAP) - DY * back - fall, 0.3);
+      holderA.rotation.z = ANG - (1 - reach) * 0.5 + flutter;
+      holderB.position.set(MX + DX * (TIP + GAP) + DX * back, MY + DY * (TIP + GAP) + DY * back + fall * 0.6, 0.3);
+      holderB.rotation.z = ANG + Math.PI + (1 - reach) * 0.5 - flutter;
+      spark.position.set(MX, MY, 0.4); spark.material.opacity = clamp((reach - 0.85) / 0.15, 0, 1) * (0.55 + 0.35 * Math.sin(tt * 2.4));
+
+      // background vortex follows Mars
+      var ux = (marsGroup.position.x / hw) * camera.aspect * 0.5, uy = (marsGroup.position.y / hh) * 0.5;
+      bgc.x += (ux - bgc.x) * 0.1; bgc.y += (uy - bgc.y) * 0.1; bgMat.uniforms.uC.value.copy(bgc); bgMat.uniforms.uTime.value = tt;
+      glitter.rotation.z = tt * 0.008; glitter.material.opacity = 0.42 + 0.16 * Math.sin(tt * 1.1);
+      flare.material.opacity = 0.7 + 0.2 * Math.sin(tt * 0.9); stars.rotation.y = tt * 0.004;
+      world.rotation.y = p * 0.25 + mx * 0.08; world.rotation.x = my * 0.05;
+      camera.position.set(mx * 0.5, 0.3 - p * 0.6 - my * 0.2, 10 - p * 1.2); camera.lookAt(0, -p * 0.3, 0);
+      renderer.clear(); renderer.render(bgScene, bgCam); renderer.clearDepth(); renderer.render(scene, camera);
+    }
+    frame(); GL.ok = true;
+  }
+
+  /* ===================== boot ===================== */
+  function initReveal() {
+    $$('.rv').forEach(function (el) {
+      if (el.classList.contains('row')) return;
+      el.addEventListener('click', function () { el.classList.toggle('open'); });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.classList.toggle('open'); } });
+    });
+  }
+  function boot() {
+    setOut(); wire(); recompute(true); route(); initReveal();
+    try { initGL(); } catch (e) { if (window.console) console.warn('three.js scene unavailable', e); }
+    window.GP = { M: M, S: S, plan: function () { return { path: P.path && pathStats(M, P.path), b0: P.b0 && pathStats(M, P.b0), curve: curve, targets: T.map(function (t) { return [t.name, +t.v.toFixed(3), t.rlo, t.rhi, +t.p3.toFixed(2)]; }) }; } };
+  }
+  boot();
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function () { try { renderMap1(); renderMap2(); renderCurve(); renderMap3(); } catch (e) {} }); }
+})();
+</script>

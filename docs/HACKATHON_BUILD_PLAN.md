@@ -54,11 +54,10 @@ All core stages are CPU-light at 512 by 512 (A* with numba is milliseconds; 100 
             │  value with feature noise, access cost = path CVaR
             │  Monte Carlo ranking: rank interval, P(top 3), evidence string
             ▼                                                        ScienceTarget[]
- [dashboard] Streamlit + Plotly: cost map, σ map, path(s), corridor, targets with
+ [dashboard] HTML + JS (Plotly.js): cost map, σ map, path(s), corridor, targets with
              error bars, bold/cautious toggle, noise slider, click-to-trace
 
- Side track B (surface perception): SegFormer-B0 on AI4Mars subset → softmax,
- entropy, calibration plot, rover-view panel in dashboard. Optional.
+ Side track B (SegFormer on AI4Mars): DROPPED Nov 14, by Udit.
 ```
 
 ### Contract additions (proposal to Udit; existing fields unchanged; changes need both owners to agree)
@@ -83,7 +82,7 @@ Owners: `HazardMap` additions are Disha's (perception) and Saptarshi's (the Mont
 | Terrain classifier (side track) | `transformers` `nvidia/segformer-b0-finetuned-ade-512-512` fine-tuned on AI4Mars | No Mars checkpoint was found on the Hub (search done 2026-11-14), so fine-tuning is the route. ADE20K checkpoint is the one named in the HF docs |
 | Calibration and conformal | `torchmetrics` CalibrationError, temperature scaling by hand, `MAPIE` (BSD-3) | All free; `MAPIE` is a stretch |
 | Planner | Own A*/Dijkstra with `numba` (or `heapq`), `scikit-image` `MCP` or `scipy.sparse.csgraph.dijkstra` for the corridor distances | Fast, no new dependencies |
-| Dashboard | Streamlit + Plotly (already chosen) | Fast to build, click events via `plotly` selection |
+| Dashboard | HTML + JS with Plotly.js (changed from Streamlit, Disha's call) | No server, works offline, click events via Plotly.js |
 | Repro | seeds in config, `pytest`, `make demo` | Part of the explainability score |
 
 ## 4. Data
@@ -100,7 +99,7 @@ Owners: `HazardMap` additions are Disha's (perception) and Saptarshi's (the Mont
 3. **DEM Monte Carlo:** 100 draws × Gaussian filter + Horn slope on 512² is cheap; store only mean and std, never all draws.
 4. **Planning sweeps:** the risk-vs-length curve needs several A* runs (about 5 alphas × several start-goal pairs). With numba this is seconds. Plain Python A* on 512² may take seconds each, so use numba or a downsampled 256² planning grid.
 5. **Evaluation:** a 100-run execution simulation per path is the one thing that can blow up. Cap at 50 start-goal pairs × 100 draws, vectorised, or reduce to 20 pairs.
-6. **Dashboard:** keep renders at 512². Cache pipeline output with `st.cache_data`; never recompute on every widget change except the toggles that need it.
+6. **Dashboard:** keep renders at 512². Read precomputed JSON bundles exported by the pipeline; never recompute in the page. Toggles switch between saved scenarios.
 
 Run `pipeline.py` once per config and serialise the `PipelineResult`, so the demo is instant and cannot fail live.
 

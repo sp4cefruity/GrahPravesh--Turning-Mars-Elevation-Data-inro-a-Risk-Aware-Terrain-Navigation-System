@@ -41,11 +41,13 @@ Uncertainty is carried end to end. Perception gives probabilities. Those become 
  [science 2] access cost = path CVaR, then Monte Carlo ranking (1000 draws):
             |  rank interval, P(top 3), evidence string
             v                                                          ScienceTarget[]
- [dashboard] Streamlit and Plotly: cost map, std map, paths, corridor, targets with
-             error bars, bold or cautious dial, noise slider, click-to-trace
+ [export]    pipeline writes one JSON bundle per scenario (grids as base64 arrays)   (Udit)
+            v                                                          outputs/web/
+ [dashboard] static HTML and JS page reads the bundle: cost map, std map, paths, corridor,
+             targets with error bars, bold or cautious dial, noise slider, click-to-trace
 
- Side track (optional): SegFormer-B0 on an AI4Mars subset -> softmax, entropy,
- calibration plot, rover-view panel. Kill at 4:00 AM if it is not working.
+ Side track DROPPED (Nov 14, by Udit): SegFormer-B0 on an AI4Mars subset. No code was written.
+ Uncertainty for terrain classes comes from the Random Forest vote spread only.
 ```
 
 `pipeline.py` runs the stages in order and returns one `PipelineResult`. Run it once per config and serialise the result, so the demo loads instantly and cannot fail live.
@@ -63,8 +65,8 @@ Ownership changes (decided by Udit on Nov 14): the DEM Monte Carlo lives in the 
 | uncertainty | `src/odyssey/uncertainty/` | Disha | DEM Monte Carlo, `slope_std_deg` |
 | planning | `src/odyssey/planning/` | Udit | Cost map (`cost_mean`, `cost_std`), CVaR edge cost, A*, Dijkstra, inflation, corridor, baselines B0 and B1, safety verifier, risk curve |
 | science | `src/odyssey/science/` | Saptarshi | Candidates, value, ranking Monte Carlo, evidence strings |
-| dashboard | `src/odyssey/dashboard/` | Disha | Interactive UI |
-| pipeline | `src/odyssey/pipeline.py` | Udit | Orchestration, config, seeds, serialisation |
+| dashboard | `src/odyssey/dashboard/` | Disha | Interactive UI in plain HTML, CSS and JavaScript (`web/`), no build step, no server needed to view it |
+| pipeline | `src/odyssey/pipeline.py` | Udit | Orchestration, config, seeds, serialisation, JSON export for the dashboard |
 
 ## Contracts (frozen at 2:15 AM)
 
@@ -77,6 +79,16 @@ All grids are NumPy arrays of shape (H, W), same orientation, same cell size in 
 - `Candidate` (Saptarshi, science step 1 output, value only, no path cost): `id`, `location` (row, col), `kind` ("ice" or "geology"), `value_mean`, `value_ci` (low, high), `evidence` (string)
 - `ScienceTarget` (Saptarshi): `id`, `location`, `value_mean`, `value_ci` (low, high), `path_cost`, `score`, `score_ci`, `rank_interval` (low, high), `p_top3`, `evidence` (string), `kind` ("ice" or "geology")
 - `PipelineResult` (Udit): all of the above plus `risk_curve` (list of alpha, path_length, hazard_violation_rate), `baseline_paths`, and `config` (seeds, weights, thresholds) so a run can be reproduced. Additive fields: `terrain`, `hazards`, `cost_map`, `candidates`, `paths` (`paths[candidate_id][mode]` is a `PathResult`), `targets` (sorted best first), `default_target_id` (top ranked target with a safe cautious path), `start` (config.start, default (8, 8)), `timings_s`, `notes`, `error` (`StageFailure` with stage name and reason) and the property `complete` (True when `error` is None). The dashboard shows output only when `complete` is True. `risk_curve` items are `RiskCurvePoint`. `baseline_paths` is keyed "b0" and "b1".
+
+## Dashboard data export (new, needed by the HTML and JS dashboard)
+
+The pickle in `pipeline.save_result` is for Python only. The browser needs a plain format, so the pipeline gets an export step.
+
+- `outputs/web/index.json` lists the scenarios (noise level, missing data flag, file name, config hash) and the default one.
+- `outputs/web/<scenario>.json` holds one `PipelineResult`. Grids (`cost_mean`, `cost_std`, `hazard_prob`, `slope_std_deg`, `dem`, `blocked`, `corridor_mask`) are written as `{shape, dtype, data}` with base64 little-endian bytes, NaN for missing. Small objects (`targets`, `paths`, `segments`, `risk_curve`, `baseline_paths`, `config`, `timings_s`, `error`) are plain JSON, with the same field names as the contracts above.
+- Simulated layer names and `source` are included so the page can label them.
+- If `error` is set, the bundle holds the stage name and reason and no grids. The page shows the reason.
+- Open question: serving. Opening `index.html` from disk blocks `fetch` in most browsers, so the page is served with `python -m http.server` from `outputs/web/` (or the bundle is inlined into a script tag as a fallback). Disha and Udit to pick one.
 
 ## Planner details
 
@@ -92,25 +104,25 @@ All grids are NumPy arrays of shape (H, W), same orientation, same cell size in 
 | Slope and roughness | Our own numpy Horn kernel (skip `richdem`, it is GPL-3.0) |
 | Correlated noise | `scipy.ndimage.gaussian_filter` on white noise |
 | Terrain classifier, main | `scikit-learn` RandomForest or `lightgbm`, per-tree votes give variance |
-| Terrain classifier, side track | `transformers` SegFormer-B0 fine-tuned on an AI4Mars subset (no Mars checkpoint found on the Hub) |
+| Terrain classifier, side track | Dropped. Was SegFormer-B0 on AI4Mars |
 | Calibration and conformal | `torchmetrics` CalibrationError, hand-rolled temperature scaling, `MAPIE` (stretch) |
 | Planner | Our own A* and Dijkstra with `numba`, `scipy.sparse.csgraph.dijkstra` for corridor distances |
-| Dashboard | Streamlit and Plotly |
+| Dashboard | Static HTML, CSS and JavaScript. Plotly.js (vendored, works offline) or canvas for the maps. The old Streamlit page is kept only until the HTML version replaces it |
 | Repro | seeds in config, `pytest`, `make demo` |
 
 ## Compute notes
 
-- Nothing in the main path needs a GPU. Only the SegFormer side track does, and it runs on Saptarshi's RTX 3050.
+- Nothing needs a GPU. The SegFormer side track that would have used one was dropped.
 - Store only mean and std from Monte Carlo, never all draws.
 - Planning searches at most 256 by 256 (`planning_grid_size` in config). Larger inputs are block-reduced inside `plan_paths` and `plan_extras`, then routes are refined back to full resolution. `TerrainGrid`, `HazardMap`, `CostMap` and every returned path stay full resolution, and the final safety check uses the full resolution blocked mask (spec 02, requirement 11). A 512 input with 5 candidates plans in about 4.5 s. numba is optional and not required.
 - Cap the execution simulation at 50 start-goal pairs by 100 draws, or 20 pairs if slow.
-- Cache pipeline output with `st.cache_data`. Recompute only for toggles that need it.
+- The dashboard never recomputes. Each scenario (noise level, missing data on or off) is precomputed by the pipeline and exported ahead of time, and the page switches between the saved bundles. This keeps the demo fast and unable to fail live.
 
 ## Data
 
 - DEM: Jezero HiRISE pair DTM `DTEEC_023524_1985_023379_1985_U01` (about 700 MB) or the USGS Mars Sample Return mosaic. Saptarshi starts the download first and confirms the tile with Disha. Fallback is a seeded synthetic fractal and crater DEM so the demo is never blocked.
 - Spectral, ice and noise layers are simulated and labelled as such.
-- AI4Mars is for the side track only, a subset only. Do not claim it works on the orbital tile.
+- AI4Mars is not used (side track dropped). Do not claim any rover-camera model.
 
 ## Design principles
 

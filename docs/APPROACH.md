@@ -53,12 +53,12 @@ Each judging criterion maps onto a piece of this chain. The full mapping is in `
 
 Showing these side by side lets us measure what the uncertainty-aware design adds, instead of just claiming it.
 
-### Optional side track
-A small SegFormer model fine-tuned on a subset of the AI4Mars rover-camera dataset, shown as a separate rover-view panel with calibration. It is time-boxed and dropped at the 4:00 AM break if it is not working. It does not feed the main pipeline.
+### Side track (dropped)
+Dropped on Nov 14 by Udit, no code written. Original idea: a small SegFormer model fine-tuned on a subset of the AI4Mars rover-camera dataset, shown as a separate rover-view panel with calibration. It is time-boxed and dropped at the 4:00 AM break if it is not working. It does not feed the main pipeline.
 
 ## 4. Why these choices
 
-- **Free, proven parts.** Python, rasterio, NumPy, scikit-learn, numba, Streamlit and Plotly. Nothing needs a GPU in the main path, which suits three laptops and a 12 hour window.
+- **Free, proven parts.** Python, rasterio, NumPy, scikit-learn, numba, and a plain HTML and JavaScript dashboard with Plotly.js. Nothing needs a GPU in the main path, which suits three laptops and a 12 hour window.
 - **Explainable over fancy.** Rules and a Random Forest can be traced cell by cell. This supports the explainability criterion and keeps the demo safe.
 - **Grounded in the literature.** The risk-aware cost follows the structure used by Endo et al. (ICRA 2023) for combining terrain classes with CVaR. The distance-growing margin comes from the IROS 2022 paper. Both are described, with their limits, in `docs/MODEL_AND_BASELINE_PLAN.md`.
 

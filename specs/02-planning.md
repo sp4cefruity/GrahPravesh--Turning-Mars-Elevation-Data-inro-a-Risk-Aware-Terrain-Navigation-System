@@ -42,6 +42,13 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
     - `hazard_violation_rate` = share of path cells whose `p_haz` is above `violation_p_haz` (default 0.5, an assumption), in 0 to 1. NaN when there is no safe path.
     - `max_slope_on_path` = largest `slope_deg` over the path cells.
 13. Build order: tiny test grid with A* and Dijkstra, safety check, cost map on dummy hazards, alpha dial, then corridor, inflation, curve, B0 and B1.
+14. Loop guard (no "safer position" oscillation). Today the planner is one shot and never relocates the rover, so it cannot loop. Any step that moves a start or goal to a safer cell, or re-plans after the map changes, must use `planning/progress.py`:
+    - `snap_to_safe(passable, cell, max_radius)`: nearest passable cell by Euclidean distance, ties broken by (row, col). Deterministic, so the same input always gives the same cell. Returns None when nothing is within `max_radius`, and the caller reports "no safe path" with that reason.
+    - A snap is picked once and committed. It is not re-picked on later passes.
+    - `ProgressGuard` tracks the cells visited and the replans used. `allow_switch(old_cost, new_cost)` accepts a new route only if it is cheaper by more than `switch_margin` (relative, default 0.05, an assumption), so two near equal routes cannot alternate.
+    - `ProgressGuard.visit(cell)` raises `NoProgress` when a cell is entered more than `max_revisits` times (default 2, an assumption). `ProgressGuard.replan()` raises `NoProgress` after `max_replans` (default 10, an assumption).
+    - `NoProgress` fails loudly with a reason, like the safety check. The result is "no safe path", never a risky path.
+    - Dynamic replanning itself stays out of scope. This requirement only makes sure that when it is added, it cannot loop.
 
 ## Acceptance checks
 
@@ -52,6 +59,9 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
 - [ ] No safe path case returns the reason and `min_feasible_risk`
 - [ ] Planning on the full tile finishes in a few seconds (512 input, 5 candidates: about 4.5 s, tested safe against the full resolution mask)
 - [ ] Grid at or below `planning_grid_size` is planned unchanged (tested)
+- [ ] `snap_to_safe` is deterministic, breaks ties by (row, col), and returns None past `max_radius` (tested)
+- [ ] A forced two cell oscillation raises `NoProgress` (tested)
+- [ ] A near equal replacement route is rejected by the switch margin (tested)
 
 ## Uncertainty and failure handling
 

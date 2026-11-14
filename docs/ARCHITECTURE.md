@@ -11,7 +11,7 @@ Uncertainty is carried end to end. Perception gives probabilities. Those become 
 ## Data flow
 
 ```
- Real HiRISE DTM tile (crop 512x512, about 1 to 2 m cells)
+ Real HiRISE DTM tile (512x512 crop at about 1 m, block averaged to the 256x256 working grid at about 2 m)
    + simulated spectral bands, ice signal, noise, gaps (tagged "simulated")
             |
  [data]       load, crop, reproject, valid_mask, seeds --------------> TerrainGrid (raw)
@@ -80,15 +80,19 @@ All grids are NumPy arrays of shape (H, W), same orientation, same cell size in 
 - `ScienceTarget` (Saptarshi): `id`, `location`, `value_mean`, `value_ci` (low, high), `path_cost`, `score`, `score_ci`, `rank_interval` (low, high), `p_top3`, `evidence` (string), `kind` ("ice" or "geology")
 - `PipelineResult` (Udit): all of the above plus `risk_curve` (list of alpha, path_length, hazard_violation_rate), `baseline_paths`, and `config` (seeds, weights, thresholds) so a run can be reproduced. Additive fields: `terrain`, `hazards`, `cost_map`, `candidates`, `paths` (`paths[candidate_id][mode]` is a `PathResult`), `targets` (sorted best first), `default_target_id` (top ranked target with a safe cautious path), `start` (config.start, default (8, 8)), `timings_s`, `notes`, `error` (`StageFailure` with stage name and reason) and the property `complete` (True when `error` is None). The dashboard shows output only when `complete` is True. `risk_curve` items are `RiskCurvePoint`. `baseline_paths` is keyed "b0" and "b1".
 
-## Dashboard data export (new, needed by the HTML and JS dashboard)
+## Dashboard data export
 
-The pickle in `pipeline.save_result` is for Python only. The browser needs a plain format, so the pipeline gets an export step.
+The pickle in `pipeline.save_result` is for Python only. The browser reads plain files written by `src/odyssey/export.py` (owner Udit). Run `python -m odyssey.export` (about 35 seconds for all scenarios). Output goes to `outputs/web/`.
 
-- `outputs/web/index.json` lists the scenarios (noise level, missing data flag, file name, config hash) and the default one.
-- `outputs/web/<scenario>.json` holds one `PipelineResult`. Grids (`cost_mean`, `cost_std`, `hazard_prob`, `slope_std_deg`, `dem`, `blocked`, `corridor_mask`) are written as `{shape, dtype, data}` with base64 little-endian bytes, NaN for missing. Small objects (`targets`, `paths`, `segments`, `risk_curve`, `baseline_paths`, `config`, `timings_s`, `error`) are plain JSON, with the same field names as the contracts above.
-- Simulated layer names and `source` are included so the page can label them.
-- If `error` is set, the bundle holds the stage name and reason and no grids. The page shows the reason.
-- Open question: serving. Opening `index.html` from disk blocks `fetch` in most browsers, so the page is served with `python -m http.server` from `outputs/web/` (or the bundle is inlined into a script tag as a fallback). Disha and Udit to pick one.
+- Scenarios: noise level 0, 1, 2, each with the simulated missing data patch off or on (6 in all). Names look like `n1_full` and `n1_missing`.
+- `index.json` lists the scenarios (name, noise level, missing data flag, file, config hash, complete flag) and the default one.
+- `<scenario>.json` holds one run, about 6 MB. Grids sit under `grids` (`dem`, `slope_deg`, `roughness`, `valid_mask`, `hazard_prob`, `terrain_class`, `slope_std_deg`, `hard_block`, `cost_mean`, `cost_std`, `blocked`), plus `bands` and `evidence_code`. The working grid is 256 by 256.
+- Grid encoding is `{shape, dtype, data}` with base64 bytes. Floats are little-endian float32 with NaN for missing. Ints are int16. Bool grids use dtype `bool_packbits` (row-major, numpy packbits order, most significant bit first, ignore the padding bits). Each path carries its own `corridor_mask` in the same encoding.
+- Plain JSON fields use the contract names: `targets`, `candidates`, `paths` (`paths[candidate_id][mode]`, with `segments`), `risk_curve`, `baseline_paths` (`b0`, `b1`), `config`, `timings_s`, `notes`, `error`. Infinite or NaN numbers become `null`, so a null `total_cost` means no safe path.
+- `targets_by_mode` holds one ranking per rover mode (`bold`, `cautious`), because ranks move with the mode. `rank_notes` and `default_target_by_mode` go with it. `targets` is the cautious ranking.
+- `simulated_layers` and `source` are included so the page can label them. `evidence_legend` maps evidence codes to text.
+- If a scenario failed, its file holds `complete: false` and `error` (stage and reason), and no grids. The page shows the reason.
+- Serving is settled: `outputs/web/bundle.js` sets `window.ODYSSEY_BUNDLE = {index, scenarios}` with everything inlined (about 37 MB), so `index.html` works from disk with a script tag and no server. A page that wants a faster start can `fetch` `index.json` and one scenario file instead, when served over HTTP.
 
 ## Planner details
 

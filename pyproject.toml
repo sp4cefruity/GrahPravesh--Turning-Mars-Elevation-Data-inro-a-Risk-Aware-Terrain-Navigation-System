@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "odyssey"
+version = "0.1.0"
+description = "MARS-09 Odyssey, uncertainty-aware Mars rover planner"
+requires-python = ">=3.11"
+# Exact versions live in requirements.txt. This list is the minimum the code imports.
+dependencies = ["numpy", "scipy", "scikit-learn"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

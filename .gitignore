@@ -12,3 +12,4 @@ data/raw/
 
 # pipeline outputs
 outputs/
+*.egg-info/

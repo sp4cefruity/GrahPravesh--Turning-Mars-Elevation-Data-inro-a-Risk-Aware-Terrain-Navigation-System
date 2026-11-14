@@ -193,6 +193,16 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
 .stackline { font-family: var(--f-title); font-weight: 500; font-size: .92rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text); margin: 0; line-height: 1.9; }
 .stackline i { color: var(--mars); font-style: normal; padding: 0 10px; }
 
+/* sandbox */
+.sbwrap { position: relative; }
+canvas.sbov { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; display: block; }
+.sbstatus { margin: 0 0 14px; padding: 12px 16px; font-family: var(--f-title); font-weight: 700; font-size: .92rem; letter-spacing: .05em; line-height: 1.4; background: #0f2a1c; color: #7dffb0; text-shadow: none; }
+.sbstatus.bad { background: #3a0c10; color: #ffb4ab; }
+.btnrow { margin-top: 14px; }
+@media (min-width: 881px) { #sandbox .split > .panel:first-child { position: sticky; top: 76px; } }
+.seg button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.sbread { font-family: var(--f-title); font-weight: 500; font-size: .86rem; letter-spacing: .05em; line-height: 1.5; color: var(--text); margin: 12px 0 0; min-height: 2.6em; font-variant-numeric: tabular-nums; }
+
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rv, .rv::before, .rv .hid, .rv .plus, .chip, .seg button { transition: none; } }
 </style>
 
@@ -207,6 +217,7 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
       <a href="#costmap">Cost map</a>
       <a href="#path">Path</a>
       <a href="#targets">Targets</a>
+      <a href="#sandbox">Sandbox</a>
       <a href="#pipeline">Pipeline</a>
       <a href="#about" id="nav-about">About us</a>
     </nav>
@@ -224,6 +235,7 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
         <a class="chip" href="#costmap">Terrain and cost map</a>
         <a class="chip" href="#path">Hazard-free path</a>
         <a class="chip" href="#targets">Ranked science targets</a>
+        <a class="chip" href="#sandbox">Play in the sandbox</a>
       </div>
     </section>
 
@@ -348,6 +360,96 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
             </div>
           </div>
           <div class="rows" id="rows" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SANDBOX -->
+    <section class="block" id="sandbox">
+      <p class="kicker">Try it yourself</p>
+      <h2 class="big">Rover <span class="fill">sandbox</span></h2>
+      <p class="hindi" lang="hi">खुद आज़माइए</p>
+      <p class="intro">Drop craters on the surface, move the start and the goal, and turn the rover's dials. The terrain, the hazards and the route are worked out again on every change, so you can see how each choice moves the plan.</p>
+      <p class="demo-note">A simplified version of our planner running in your browser on a simulated surface. It has no Random Forest and no elevation Monte Carlo. The full pipeline runs in Python on real HiRISE tiles. Crater shapes are idealised bowls with a raised rim.</p>
+      <div class="split">
+        <div class="panel">
+          <p class="sbstatus" id="sbstatus" role="status" aria-live="polite"></p>
+          <div class="sbwrap">
+            <canvas class="map" id="sbmap" width="704" height="704" aria-label="Sandbox map. Choose a tool, then click the map."></canvas>
+            <canvas class="sbov" id="sbov" width="704" height="704" aria-hidden="true"></canvas>
+          </div>
+          <div class="legend">
+            <span style="color:var(--gold)">━ Your route</span>
+            <span style="color:#bfe9ff">╌ Baseline B0</span>
+            <span style="color:var(--mars)">▓ Hard block</span>
+            <span style="color:var(--cyan)">S start</span>
+            <span style="color:var(--gold)">G goal</span>
+          </div>
+          <p class="tiny" id="sbhint" style="margin-top:10px"></p>
+        </div>
+        <div class="stack">
+          <div class="panel">
+            <p class="tagline">Tool</p>
+            <div class="seg" id="sbtools" role="group" aria-label="Sandbox tool">
+              <button type="button" data-tool="crater" aria-pressed="true">Add crater</button>
+              <button type="button" data-tool="start" aria-pressed="false">Move start</button>
+              <button type="button" data-tool="goal" aria-pressed="false">Move goal</button>
+              <button type="button" data-tool="erase" aria-pressed="false">Remove crater</button>
+            </div>
+            <div class="ctl" style="margin-top:18px">
+              <label for="sbdiam">Crater diameter <b id="sbdiam-out">140 m</b></label>
+              <input type="range" id="sbdiam" min="60" max="320" step="10" value="140">
+            </div>
+            <div class="seg btnrow">
+              <button type="button" id="sbrandom">Random impacts</button>
+              <button type="button" id="sbundo">Undo</button>
+              <button type="button" id="sbclear">Clear craters</button>
+              <button type="button" id="sbterrain">New terrain</button>
+              <button type="button" id="sbreset">Reset</button>
+            </div>
+          </div>
+          <div class="panel ctls">
+            <div class="ctl">
+              <label for="sbalpha">Risk dial (CVaR α) <b id="sbalpha-out">cautious 0.90</b></label>
+              <input type="range" id="sbalpha" min="0" max="0.99" step="0.01" value="0.9">
+            </div>
+            <div class="ctl">
+              <label for="sbdrift">Localization drift margin <b id="sbdrift-out">1.0</b></label>
+              <input type="range" id="sbdrift" min="0" max="2" step="0.1" value="1">
+            </div>
+            <div class="ctl">
+              <label for="sbnoise">Sensor noise <b id="sbnoise-out">0.35</b></label>
+              <input type="range" id="sbnoise" min="0" max="1" step="0.05" value="0.35">
+            </div>
+            <div class="ctl">
+              <label for="sblimit">Steepest slope allowed <b id="sblimit-out">25°</b></label>
+              <input type="range" id="sblimit" min="10" max="40" step="1" value="25">
+            </div>
+          </div>
+          <div class="panel">
+            <p class="tagline">Map layer</p>
+            <div class="seg" id="sblayers" role="group" aria-label="Sandbox map layer">
+              <button type="button" data-sblayer="elev" aria-pressed="true">Terrain</button>
+              <button type="button" data-sblayer="cost" aria-pressed="false">Cost μ</button>
+              <button type="button" data-sblayer="sigma" aria-pressed="false">Uncertainty σ</button>
+              <button type="button" data-sblayer="haz" aria-pressed="false">Hazard P</button>
+            </div>
+            <div class="seg btnrow">
+              <button type="button" id="sbbase" aria-pressed="true">Baseline route</button>
+              <button type="button" id="sbcor" aria-pressed="false">Corridor</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="tablewrap">
+              <table class="grid stats">
+                <thead><tr><th>Measure</th><th>Your route</th><th>Baseline B0</th></tr></thead>
+                <tbody id="sbstats"></tbody>
+              </table>
+            </div>
+            <p class="readout" id="sbreadout"></p>
+            <div class="seg btnrow"><button type="button" id="sbdrive">Drive the route</button></div>
+            <p class="sbread" id="sbdriveout" aria-live="off">Press Drive to watch the rover follow the route.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -490,13 +592,15 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
   var CRATERS = [[42, 46, 11, 32], [63, 27, 8, 24], [24, 61, 9, 26], [71, 66, 7, 20], [29, 26, 7, 20], [55, 55, 6, 16], [14, 38, 6, 16], [76, 44, 5, 12]];
   var MISSING = [[31, 40, 5], [66, 48, 4]];
 
-  function buildModel(noise) {
+  function buildModel(noise, opt) {
+    opt = opt || {};
+    var LIM = opt.limit || SLOPE_BLOCK, CR = opt.craters || CRATERS, MS = opt.missing || MISSING, sdv = (opt.seed || 0) * 101;
     var n2 = N * N, i, x, y;
-    var nz1 = makeNoise(11), nz2 = makeNoise(23), nz3 = makeNoise(37), nz4 = makeNoise(53);
+    var nz1 = makeNoise(11 + sdv), nz2 = makeNoise(23 + sdv), nz3 = makeNoise(37 + sdv), nz4 = makeNoise(53 + sdv);
     var z = new Float32Array(n2);
     for (y = 0; y < N; y++) for (x = 0; x < N; x++) {
       var h = 46 * nz1(x / 24, y / 24, 4) + 9 * nz2(x / 8 + 40, y / 8, 3) + 0.15 * (N - y);
-      CRATERS.forEach(function (c) {
+      CR.forEach(function (c) {
         var dx = x - c[0], dy = y - c[1], r = Math.sqrt(dx * dx + dy * dy), R = c[2], d = c[3];
         if (r < R) h -= d * (1 - (r / R) * (r / R));
         var q = (r - R) / (0.22 * R); h += 0.28 * d * Math.exp(-q * q);
@@ -516,9 +620,9 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
       var rockP = smooth(0.58, 0.78, nz4(x / 13, y / 13 + 9, 3)) * 0.9;
       var rough = clamp(lap * 0.35 + rockP * 0.7, 0, 1);
       var missing = 0;
-      MISSING.forEach(function (m) { var dx = x - m[0], dy = y - m[1]; if (dx * dx + dy * dy <= m[2] * m[2]) missing = 1; });
+      MS.forEach(function (m) { var dx = x - m[0], dy = y - m[1]; if (dx * dx + dy * dy <= m[2] * m[2]) missing = 1; });
       var tsig = 1.0 + 5 * noise * (0.4 + rough) + (missing ? 6 : 0);
-      var ps = 1 - Phi((SLOPE_BLOCK - th) / tsig);
+      var ps = 1 - Phi((LIM - th) / tsig);
       var pr = 1 - Phi((0.8 - rough) / (0.08 + 0.15 * noise));
       var pc = clamp(sandP * 0.55 + rockP * 0.8, 0, 0.95);
       var ph = 1 - (1 - ps) * (1 - pr * 0.8) * (1 - pc * 0.55);
@@ -526,12 +630,13 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
       var sd = Math.sqrt(Math.pow(2.4 * 2 * th / (SLOPE_BLOCK * SLOPE_BLOCK) * tsig, 2) + Math.pow(2.6, 2) * pc * (1 - pc) * 0.6 + Math.pow(0.12 + 0.5 * noise, 2) * (0.3 + rough) + (missing ? 1.4 : 0));
       M.theta[i] = th; M.tsig[i] = tsig; M.rough[i] = rough; M.pc[i] = pc; M.psand[i] = sandP; M.prock[i] = rockP;
       M.phaz[i] = ph; M.mu[i] = mu; M.sg[i] = sd; M.miss[i] = missing;
-      M.blk[i] = (th > SLOPE_BLOCK || ph > DELTA) ? 1 : 0;
+      M.blk[i] = (th > LIM || ph > DELTA) ? 1 : 0;
     }
+    M.limit = LIM;
     M.dt = distTransform(M.blk);
     M.start = findFree(M, 7, N - 9, 7); M.goal = findFree(M, N - 9, 8, 7);
     M.cv0 = new Float32Array(n2); M.blk0 = new Uint8Array(n2);
-    for (i = 0; i < n2; i++) { M.cv0[i] = 1 + Math.pow(M.theta[i] / SLOPE_BLOCK, 2); M.blk0[i] = M.theta[i] > SLOPE_BLOCK ? 1 : 0; }
+    for (i = 0; i < n2; i++) { M.cv0[i] = 1 + Math.pow(M.theta[i] / SLOPE_BLOCK, 2); M.blk0[i] = M.theta[i] > LIM ? 1 : 0; }
     return M;
   }
   function distTransform(blk) {
@@ -610,7 +715,7 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
   function pathStats(M, p) {
     var len = 0, ex = 0, ms = 0, mu = 0, v = 0, ok = true, i;
     for (i = 0; i < p.length; i++) {
-      var c = p[i]; ex += M.phaz[c]; ms = Math.max(ms, M.theta[c]); mu += M.mu[c]; v += M.sg[c] * M.sg[c]; if (M.blk[c] || M.theta[c] > SLOPE_BLOCK) ok = false;
+      var c = p[i]; ex += M.phaz[c]; ms = Math.max(ms, M.theta[c]); mu += M.mu[c]; v += M.sg[c] * M.sg[c]; if (M.blk[c] || M.theta[c] > (M.limit || SLOPE_BLOCK)) ok = false;
       if (i > 0) { var a = p[i - 1], dx = Math.abs(c % N - a % N), dy = Math.abs(((c / N) | 0) - ((a / N) | 0)); len += (dx + dy === 2 ? 1.4142 : 1) * CELL; }
     }
     return { len: len, exposure: ex, maxSlope: ms, mu: mu, sd: Math.sqrt(v), ok: ok };
@@ -836,6 +941,202 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
     $$('#layers button').forEach(function (b) { b.addEventListener('click', function () { S.layer = b.dataset.layer; renderMap1(); }); });
     ['#map1', '#map2', '#map3'].forEach(function (id) { $(id).addEventListener('click', traceCell); });
     $('#map1').addEventListener('click', traceCell);
+  }
+
+  /* ===================== sandbox: your own craters, start and goal ===================== */
+  var SBX = { craters: [], start: -1, goal: -1, tool: 'crater', diam: 140, alpha: 0.9, drift: 1, noise: 0.35, limit: SLOPE_BLOCK, tau: 0.06, layer: 'elev', base: true, cor: false, seed: 0, hover: -1, drive: null };
+  var SB = { M: null, P: null, a: null, b: null, ms: 0, cum: null };
+  var SB_HINTS = {
+    crater: 'Click the map to drop a crater of the chosen size. Steep crater walls become hard blocks.',
+    start: 'Click open ground to move the rover start.',
+    goal: 'Click open ground to move the goal.',
+    erase: 'Click inside a crater to remove it.'
+  };
+  function sbCrater(cx, cy, D) { return [cx, cy, D / 2 / CELL, 0.145 * D, D]; }
+  function sbDefaults() {
+    SBX.craters = CRATERS.map(function (c) { return c.slice(); });
+    SBX.start = -1; SBX.goal = -1; SBX.seed = 0; SBX.drive = null;
+  }
+  function sbPlan() {
+    var M2 = SB.M, out, k, d;
+    cancelAnimationFrame(sbDrive.raf); SBX.drive = null;
+    M2.start = SBX.start; M2.goal = SBX.goal;
+    if (M2.blk[M2.start] || M2.blk[M2.goal]) {
+      out = { path: null, b0: null, corridor: new Uint8Array(N * N),
+        note: M2.blk[M2.start] ? 'The start is on hard-blocked ground, so no safe route can begin there.' : 'The goal is on hard-blocked ground, so no safe route can end there.' };
+    } else out = planAll(M2, { alpha: SBX.alpha, drift: SBX.drift, tau: SBX.tau });
+    SB.P = out; SB.a = out.path ? pathStats(M2, out.path) : null; SB.b = out.b0 ? pathStats(M2, out.b0) : null;
+    SB.cum = null;
+    if (out.path) {
+      SB.cum = [0];
+      for (k = 1; k < out.path.length; k++) {
+        d = Math.abs(out.path[k] % N - out.path[k - 1] % N) + Math.abs(((out.path[k] / N) | 0) - ((out.path[k - 1] / N) | 0));
+        SB.cum.push(SB.cum[k - 1] + (d === 2 ? 1.4142 : 1) * CELL);
+      }
+    }
+  }
+  function sbBuild() {
+    SB.M = buildModel(SBX.noise, { craters: SBX.craters, limit: SBX.limit, seed: SBX.seed });
+    if (SBX.start < 0) SBX.start = SB.M.start;
+    if (SBX.goal < 0) SBX.goal = SB.M.goal;
+    sbPlan();
+  }
+  function sbSync(full) {
+    var t0 = performance.now();
+    if (full) sbBuild(); else sbPlan();
+    SB.ms = performance.now() - t0;
+    sbRender();
+  }
+  var sbPending = false;
+  function sbSchedule(full) {
+    sbPending = sbPending === 'full' || full ? 'full' : true;
+    if (sbSchedule.t) return;
+    sbSchedule.t = requestAnimationFrame(function () { sbSchedule.t = 0; var f = sbPending === 'full'; sbPending = false; sbSync(f); });
+  }
+  function sbHint(t) { $('#sbhint').textContent = t || SB_HINTS[SBX.tool]; }
+
+  function sbRender() {
+    var cv = $('#sbmap'), M2 = SB.M, P2 = SB.P, ctx = paintBase(cv, M2, SBX.layer, true), s = cv.width / N, i;
+    if (SBX.cor && P2.corridor) {
+      ctx.save(); ctx.fillStyle = 'rgba(255,170,60,0.28)';
+      for (i = 0; i < P2.corridor.length; i++) if (P2.corridor[i]) ctx.fillRect((i % N) * s, ((i / N) | 0) * s, s + 0.5, s + 0.5);
+      ctx.restore();
+    }
+    if (SBX.base) drawPath(ctx, cv, P2.b0, '#bfe9ff', 2.5, [7, 6]);
+    drawPath(ctx, cv, P2.path, '#ffd27a', 4, [], 'rgba(255,200,90,.9)');
+    marker(ctx, cv, M2.start, '#3fd2ff', 'S'); marker(ctx, cv, M2.goal, '#ffd27a', 'G');
+    sbStats(); sbOverlay();
+  }
+  function sbStats() {
+    var a = SB.a, b = SB.b, P2 = SB.P, st = $('#sbstatus'), ro = $('#sbreadout');
+    function cell(x, k, d) { return x ? fmt(x[k], d) : 'no path'; }
+    var rows = [
+      ['Length (m)', cell(a, 'len', 0), cell(b, 'len', 0)],
+      ['Hazard exposure, ΣP', cell(a, 'exposure', 2), cell(b, 'exposure', 2)],
+      ['Peak slope (°)', cell(a, 'maxSlope', 1), cell(b, 'maxSlope', 1)],
+      ['Cost μ ± σ', a ? fmt(a.mu, 0) + ' ± ' + fmt(a.sd, 0) : 'no path', b ? fmt(b.mu, 0) + ' ± ' + fmt(b.sd, 0) : 'no path'],
+      ['Hard-hazard check', a ? (a.ok ? '<span class="ok">✓ clear</span>' : '<span class="bad">✗ crosses</span>') : 'n/a', b ? (b.ok ? '<span class="ok">✓ clear</span>' : '<span class="bad">✗ crosses</span>') : 'n/a']
+    ];
+    $('#sbstats').innerHTML = rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="ours">' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('');
+    if (a) {
+      st.className = 'sbstatus' + (a.ok ? '' : ' bad');
+      st.textContent = a.ok ? 'Route found: ' + a.len.toFixed(0) + ' m, peak slope ' + a.maxSlope.toFixed(1) + '°. The safety check passed.' + (P2.note ? ' ' + P2.note : '') : 'A route exists but it fails the safety check.';
+    } else {
+      st.className = 'sbstatus bad';
+      st.textContent = 'No safe route. ' + (P2.note || 'Hard-blocked ground, such as steep crater walls, cuts the start off from the goal. Raise the slope limit, lower the drift margin, remove a crater or move a marker.');
+    }
+    if (a && b) {
+      var dl = (a.len / b.len - 1) * 100, de = b.exposure > 0 ? (1 - a.exposure / b.exposure) * 100 : 0;
+      ro.innerHTML = 'Against the baseline, this route drives <b>' + Math.abs(dl).toFixed(0) + '% ' + (dl >= 0 ? 'further' : 'less') + '</b> and carries <b>' + Math.abs(de).toFixed(0) + '% ' + (de >= 0 ? 'less' : 'more') + ' hazard exposure</b>.';
+    } else if (a && !b) ro.textContent = 'The baseline finds no route here.';
+    else ro.textContent = '';
+    $('#sbdrive').disabled = !a;
+  }
+  function sbOverlay() {
+    var ov = $('#sbov'), ctx = ov.getContext('2d'), s = ov.width / N, M2 = SB.M, p = SB.P && SB.P.path, k;
+    ctx.clearRect(0, 0, ov.width, ov.height);
+    if (SBX.hover >= 0) {
+      var hx = (SBX.hover % N + 0.5) * s, hy = (((SBX.hover / N) | 0) + 0.5) * s;
+      ctx.save(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath();
+      ctx.arc(hx, hy, SBX.tool === 'crater' ? SBX.diam / 2 / CELL * s : 11, 0, 6.2832); ctx.stroke();
+      if (SBX.tool === 'crater') { ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(hx - 6, hy); ctx.lineTo(hx + 6, hy); ctx.moveTo(hx, hy - 6); ctx.lineTo(hx, hy + 6); ctx.stroke(); }
+      ctx.restore();
+    }
+    if (SBX.drive && p) {
+      var i = SBX.drive.i, c = p[i], x = (c % N + 0.5) * s, y = (((c / N) | 0) + 0.5) * s, a, pc, ang = 0;
+      ctx.save(); ctx.strokeStyle = '#7dffb0'; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath();
+      for (k = 0; k <= i; k++) { var q = p[k], qx = (q % N + 0.5) * s, qy = (((q / N) | 0) + 0.5) * s; if (k) ctx.lineTo(qx, qy); else ctx.moveTo(qx, qy); }
+      ctx.stroke();
+      if (i > 0) { pc = p[i - 1]; ang = Math.atan2(((c / N) | 0) - ((pc / N) | 0), c % N - pc % N); }
+      ctx.translate(x, y); ctx.rotate(ang); ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#04050b'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, -9); ctx.lineTo(-5, 0); ctx.lineTo(-9, 9); ctx.closePath(); ctx.stroke(); ctx.fill();
+      ctx.restore();
+    }
+  }
+  function sbDriveReadout() {
+    var d = SBX.drive, p = SB.P && SB.P.path; if (!d || !p) return;
+    var c = p[d.i], M2 = SB.M;
+    $('#sbdriveout').textContent = 'Step ' + (d.i + 1) + ' of ' + p.length + ' · ' + SB.cum[d.i].toFixed(0) + ' m driven · slope ' + M2.theta[c].toFixed(1) + '° · hazard P ' + M2.phaz[c].toFixed(2) + ' · cost ' + M2.mu[c].toFixed(2) + (d.i === p.length - 1 ? ' · arrived' : '');
+  }
+  function sbDrive() {
+    var p = SB.P && SB.P.path; if (!p) return;
+    cancelAnimationFrame(sbDrive.raf);
+    var t0 = performance.now(), n = p.length;
+    SBX.drive = { i: 0 };
+    (function step(now) {
+      if (!SBX.drive) return;
+      SBX.drive.i = Math.max(0, Math.min(n - 1, Math.floor((now - t0) / 1000 * 24)));
+      sbOverlay(); sbDriveReadout();
+      if (SBX.drive.i < n - 1) sbDrive.raf = requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function sbCellAt(ev) {
+    var cv = $('#sbmap'), r = cv.getBoundingClientRect(), x = Math.floor((ev.clientX - r.left) / r.width * N), y = Math.floor((ev.clientY - r.top) / r.height * N);
+    return (x < 0 || y < 0 || x >= N || y >= N) ? null : [x, y];
+  }
+  function sbAct(x, y) {
+    var i = y * N + x, k, best = -1, bd = 1e9, c, d;
+    if (SBX.tool === 'crater') { SBX.craters.push(sbCrater(x, y, SBX.diam)); sbSchedule(true); sbHint('Crater added at (' + x + ', ' + y + '). Undo removes it.'); }
+    else if (SBX.tool === 'start') { SBX.start = i; sbSchedule(false); sbHint('Start moved to (' + x + ', ' + y + ').'); }
+    else if (SBX.tool === 'goal') { SBX.goal = i; sbSchedule(false); sbHint('Goal moved to (' + x + ', ' + y + ').'); }
+    else {
+      for (k = 0; k < SBX.craters.length; k++) { c = SBX.craters[k]; d = Math.sqrt((x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1])) / c[2]; if (d <= 1.25 && d < bd) { bd = d; best = k; } }
+      if (best >= 0) { SBX.craters.splice(best, 1); sbSchedule(true); sbHint('Crater removed.'); } else sbHint('No crater there. Click inside a crater to remove it.');
+    }
+  }
+  function sbRandom() {
+    var rng = mulberry32((Date.now() & 0xffffff) + SBX.craters.length), n = 0, tries = 0, D, x, y, R, near;
+    while (n < 5 && tries++ < 80) {
+      D = 60 + Math.floor(rng() * 15) * 10; R = D / 2 / CELL; x = Math.floor(R + 2 + rng() * (N - 2 * R - 4)); y = Math.floor(R + 2 + rng() * (N - 2 * R - 4));
+      near = [SBX.start, SBX.goal].some(function (c) { var dx = x - c % N, dy = y - ((c / N) | 0); return Math.sqrt(dx * dx + dy * dy) < R + 4; });
+      if (near) continue;
+      SBX.craters.push(sbCrater(x, y, D)); n++;
+    }
+    sbSchedule(true); sbHint(n + ' random impacts added. They keep clear of the start and the goal.');
+  }
+  function sbOut() {
+    $('#sbdiam-out').textContent = SBX.diam + ' m';
+    $('#sbalpha-out').textContent = (SBX.alpha < 0.3 ? 'bold ' : SBX.alpha > 0.8 ? 'cautious ' : '') + SBX.alpha.toFixed(2);
+    $('#sbdrift-out').textContent = SBX.drift.toFixed(1); $('#sbnoise-out').textContent = SBX.noise.toFixed(2); $('#sblimit-out').textContent = SBX.limit + '°';
+  }
+  function sbSetControls() {
+    $('#sbdiam').value = SBX.diam; $('#sbalpha').value = SBX.alpha; $('#sbdrift').value = SBX.drift; $('#sbnoise').value = SBX.noise; $('#sblimit').value = SBX.limit;
+    $$('#sbtools button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tool === SBX.tool ? 'true' : 'false'); });
+    $$('#sblayers button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.sblayer === SBX.layer ? 'true' : 'false'); });
+    $('#sbbase').setAttribute('aria-pressed', SBX.base ? 'true' : 'false'); $('#sbcor').setAttribute('aria-pressed', SBX.cor ? 'true' : 'false');
+    sbOut(); sbHint();
+  }
+  function sbInit() {
+    if (!$('#sbmap')) return;
+    sbDefaults(); sbSetControls(); sbSync(true);
+    var cv = $('#sbmap');
+    cv.addEventListener('click', function (ev) { var c = sbCellAt(ev); if (c) sbAct(c[0], c[1]); });
+    cv.addEventListener('mousemove', function (ev) { var c = sbCellAt(ev); SBX.hover = c ? c[1] * N + c[0] : -1; sbOverlay(); });
+    cv.addEventListener('mouseleave', function () { SBX.hover = -1; sbOverlay(); });
+    $$('#sbtools button').forEach(function (b) { b.addEventListener('click', function () { SBX.tool = b.dataset.tool; sbSetControls(); sbOverlay(); }); });
+    $$('#sblayers button').forEach(function (b) { b.addEventListener('click', function () { SBX.layer = b.dataset.sblayer; sbSetControls(); sbRender(); }); });
+    $('#sbbase').addEventListener('click', function () { SBX.base = !SBX.base; sbSetControls(); sbRender(); });
+    $('#sbcor').addEventListener('click', function () { SBX.cor = !SBX.cor; sbSetControls(); sbRender(); });
+    $('#sbdiam').addEventListener('input', function (e) { SBX.diam = +e.target.value; sbOut(); sbOverlay(); });
+    $('#sbalpha').addEventListener('input', function (e) { SBX.alpha = +e.target.value; sbOut(); sbSchedule(false); });
+    $('#sbdrift').addEventListener('input', function (e) { SBX.drift = +e.target.value; sbOut(); sbSchedule(false); });
+    $('#sbnoise').addEventListener('input', function (e) { SBX.noise = +e.target.value; sbOut(); sbSchedule(true); });
+    $('#sblimit').addEventListener('input', function (e) { SBX.limit = +e.target.value; sbOut(); sbSchedule(true); });
+    $('#sbrandom').addEventListener('click', sbRandom);
+    $('#sbundo').addEventListener('click', function () { if (SBX.craters.length) { SBX.craters.pop(); sbSchedule(true); sbHint('Last crater removed.'); } else sbHint('No craters to undo.'); });
+    $('#sbclear').addEventListener('click', function () { SBX.craters = []; sbSchedule(true); sbHint('All craters cleared. This is bare terrain.'); });
+    $('#sbterrain').addEventListener('click', function () { SBX.seed = (SBX.seed + 1) % 6; sbSchedule(true); sbHint('Terrain ' + (SBX.seed + 1) + ' of 6. Craters, start and goal are kept.'); });
+    $('#sbreset').addEventListener('click', function () {
+      var tool = SBX.tool; sbDefaults(); SBX.tool = tool; SBX.diam = 140; SBX.alpha = 0.9; SBX.drift = 1; SBX.noise = 0.35; SBX.limit = SLOPE_BLOCK;
+      sbSetControls(); sbSync(true); sbHint('Back to the starting scene.');
+    });
+    $('#sbdrive').addEventListener('click', sbDrive);
+    window.GPS = {
+      state: SBX, model: function () { return SB.M; }, plan: function () { return { path: SB.P && SB.P.path, a: SB.a, b: SB.b, note: SB.P && SB.P.note, ms: SB.ms }; },
+      addCrater: function (x, y, D) { SBX.craters.push(sbCrater(x, y, D || SBX.diam)); sbSync(true); },
+      set: function (k, v) { SBX[k] = v; sbSync(k === 'noise' || k === 'limit' || k === 'seed'); }
+    };
   }
 
   /* ===================== routing ===================== */
@@ -1073,12 +1374,12 @@ footer p { margin: 0; color: var(--muted); font-size: 1.08rem; max-width: 56ch; 
     });
   }
   function boot() {
-    setOut(); wire(); recompute(true); route(); initReveal();
+    setOut(); wire(); recompute(true); sbInit(); route(); initReveal();
     try { initGL(); } catch (e) { if (window.console) console.warn('three.js scene unavailable', e); }
     window.GP = { M: M, S: S, plan: function () { return { path: P.path && pathStats(M, P.path), b0: P.b0 && pathStats(M, P.b0), curve: curve, targets: T.map(function (t) { return [t.name, +t.v.toFixed(3), t.rlo, t.rhi, +t.p3.toFixed(2)]; }) }; } };
   }
   boot();
-  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function () { try { renderMap1(); renderMap2(); renderCurve(); renderMap3(); } catch (e) {} }); }
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function () { try { renderMap1(); renderMap2(); renderCurve(); renderMap3(); sbRender(); } catch (e) {} }); }
 })();
 </script>
 </body>

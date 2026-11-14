@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "MARS-09 Odyssey, uncertainty-aware Mars rover planner"
 requires-python = ">=3.11"
 # Exact versions live in requirements.txt. This list is the minimum the code imports.
-dependencies = ["numpy", "scipy", "scikit-learn"]
+dependencies = ["numpy", "scipy", "scikit-learn", "requests", "pyyaml"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

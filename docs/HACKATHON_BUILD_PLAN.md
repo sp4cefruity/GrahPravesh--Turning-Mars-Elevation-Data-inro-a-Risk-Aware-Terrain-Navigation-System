@@ -26,12 +26,12 @@ The base concept that earns points is **uncertainty carried end to end**: percep
 | Udit | Ryzen 7 PRO 7840U laptop, 16 GB, no usable GPU, **100 AWS credits** | Planner, pipeline, integration. If the SegFormer side track runs, rent one GPU instance (for example a single-GPU `g5.xlarge` class; price and quota not verified, check the console) and stop it after training |
 | Saptarshi | i5-12450H, RTX 3050 4 GB, 16 GB (CUDA) | Data loader and simulated bands, uncertainty Monte Carlo, science ranking. Also the only CUDA machine: runs the SegFormer-B0 fine-tune (small batches, `fp16` autocast) using Disha's training script |
 
-All core stages are CPU-light at 512 by 512 (A* with numba is milliseconds; 100 slope Monte Carlo draws is seconds). Nothing in the main path needs a GPU. Install `torch` per machine (MPS, CUDA, CPU).
+All core stages are CPU-light at 256 by 256 (A* with numba is milliseconds; 100 slope Monte Carlo draws is seconds). Nothing in the main path needs a GPU. Install `torch` per machine (MPS, CUDA, CPU).
 
 ## 2. Architecture
 
 ```
- Real HiRISE DTM tile (crop 512x512, ~1-2 m cells)
+ Real HiRISE DTM tile (512x512 crop at ~1 m, block averaged to the 256x256 working grid at ~2 m)
    + simulated spectral bands, ice signal, noise, gaps (tagged "simulated")
             │
  [data]      load, crop, reproject, valid_mask, seeds ─────────────► TerrainGrid
@@ -96,10 +96,10 @@ Owners: `HazardMap` additions are Disha's (perception) and Saptarshi's (the Mont
 
 1. **Downloads:** the DTM is hundreds of MB to several GB. Start first, crop immediately, commit only the small crop if the licence allows (check).
 2. **SegFormer fine-tune:** the only GPU-bound item. B0 at 512 px with batch 4 and fp16 should fit the 3050's 4 GB; this is an expectation, not measured. Cap at one hour. If it fails by 4:00 AM, drop it.
-3. **DEM Monte Carlo:** 100 draws × Gaussian filter + Horn slope on 512² is cheap; store only mean and std, never all draws.
-4. **Planning sweeps:** the risk-vs-length curve needs several A* runs (about 5 alphas × several start-goal pairs). With numba this is seconds. Plain Python A* on 512² may take seconds each, so use numba or a downsampled 256² planning grid.
+3. **DEM Monte Carlo:** 100 draws × Gaussian filter + Horn slope on 256² is cheap; store only mean and std, never all draws.
+4. **Planning sweeps:** the risk-vs-length curve needs several A* runs (about 5 alphas × several start-goal pairs). With numba this is seconds. Plain Python A* on a large grid may take seconds each, so use numba or the 256² planning grid (the working grid is already 256²).
 5. **Evaluation:** a 100-run execution simulation per path is the one thing that can blow up. Cap at 50 start-goal pairs × 100 draws, vectorised, or reduce to 20 pairs.
-6. **Dashboard:** keep renders at 512². Read precomputed JSON bundles exported by the pipeline; never recompute in the page. Toggles switch between saved scenarios.
+6. **Dashboard:** keep renders at 256². Read precomputed JSON bundles exported by the pipeline; never recompute in the page. Toggles switch between saved scenarios.
 
 Run `pipeline.py` once per config and serialise the `PipelineResult`, so the demo is instant and cannot fail live.
 

@@ -28,7 +28,7 @@ Full mapping: `docs/EVALUATION_MAP.md`.
 
 ## Decisions made so far
 
-- Real DEM tile (for example Jezero crater, public USGS or NASA data) cropped to about 512 by 512. Spectral bands, ice signal and sensor noise are simulated and labelled as such.
+- Real DEM tile (for example Jezero crater, public USGS or NASA data) cropped to 512 by 512 at about 1 m, then block averaged to the 256 by 256 grid at about 2 m that the pipeline runs on. Spectral bands, ice signal and sensor noise are simulated and labelled as such.
 - Interactive dashboard in plain HTML and JavaScript (Disha's decision, replaces the earlier Streamlit plan). It reads precomputed JSON exported by the pipeline.
 - Perception: rule-based hazards first. A CNN for terrain classes is an experiment. We try it early and keep it only if it works and stays explainable. Fallback is Random Forest.
 - Planner: A* main, Dijkstra as baseline. RRT not planned.

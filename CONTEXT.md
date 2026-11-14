@@ -30,8 +30,8 @@ Full mapping: `docs/EVALUATION_MAP.md`.
 
 - Real DEM tile (for example Jezero crater, public USGS or NASA data) cropped to 512 by 512 at about 1 m, then block averaged to the 256 by 256 grid at about 2 m that the pipeline runs on. Spectral bands, ice signal and sensor noise are simulated and labelled as such.
 - Interactive dashboard in plain HTML and JavaScript (Disha's decision, replaces the earlier Streamlit plan). It reads precomputed JSON exported by the pipeline.
-- Perception: rule-based hazards first. A CNN for terrain classes is an experiment. We try it early and keep it only if it works and stays explainable. Fallback is Random Forest.
-- Planner: A* main, Dijkstra as baseline. RRT not planned.
+- Perception: rule-based hazards first. A CNN for terrain classes was tried and measured (held-out macro F1 0.13 against 0.79 for the Random Forest), so the Random Forest is the default and the CNN stays an optional experiment behind `classifier="cnn"` (needs torch). Details in `specs/01-perception.md`.
+- Planner: A* main, Dijkstra as baseline. RRT not planned. A loop guard (`planning/progress.py`) stops safer-cell snapping and replanning from oscillating. It is off by default.
 - Uncertainty: Monte Carlo (about 50 to 100 samples) over DEM and sensor noise.
 - Science ranking: expected value divided by traversal cost, with a confidence band.
 - Overall flow is not locked. Disha is researching and will add gaps and ideas to `docs/RESEARCH_NOTES.md`. Specs stay in `draft` until that lands.

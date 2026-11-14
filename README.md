@@ -19,7 +19,7 @@ TODO (Udit): install and run steps. Must work from a clean checkout.
 0. **Data** (Saptarshi): load the real DEM tile and generate the simulated spectral bands, noise and missing patches.
 1. **Perception** (Disha): derive slope, roughness and aspect from the DEM, classify terrain, build a hazard map.
 2. **Uncertainty** (Saptarshi): Monte Carlo over DEM and sensor noise gives a mean and spread for every cell.
-3. **Planning** (Udit): cost map, A* with Dijkstra as a baseline, a hard safety rule, and a cautious mode that penalises uncertain cells.
+3. **Planning** (Udit): cost map, A* with Dijkstra as a baseline, a hard safety rule, a cautious mode that penalises uncertain cells, and a loop guard so snapping a goal to a safer cell or replanning cannot oscillate (off by default).
 4. **Science** (Saptarshi): rank candidate formations by value divided by cost, with confidence bands and a written evidence trail.
 5. **Dashboard** (Disha): interactive view of all of the above.
 

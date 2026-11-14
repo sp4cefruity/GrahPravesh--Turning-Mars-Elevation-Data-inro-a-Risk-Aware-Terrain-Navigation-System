@@ -21,7 +21,8 @@ Likely questions and short answers to fill in:
 - Why A* and not RRT? Grid cost map suits A*, gives optimal paths, easy to explain and verify.
 - How do you know the uncertainty is meaningful? Monte Carlo over DEM and sensor noise, spread shown per cell. Say what noise model we used.
 - What is real and what is simulated? Real DEM. Simulated spectral bands, ice signal, noise.
-- What did the CNN add (if kept)? Fill in after the 4:00 AM decision.
+- What did the CNN add? Nothing yet. We built a small CNN and measured it against the Random Forest on held-out tiles: macro F1 0.13 against 0.79. The forest stays the default. Both learn from rule-derived pseudo-labels, so neither is a claim about real terrain.
+- Can the planner get stuck going back and forth? No. Snapping a goal to a safer cell happens once, and a replan counter and revisit limit stop any loop with a "no safe path" answer.
 - What happens if the sensor data is missing? Cells are marked invalid and given a high cost, the planner routes around them.
 - How would this run on a real rover? Smaller grid, local replanning, onboard compute limits, honest answer on what we did not test.
 

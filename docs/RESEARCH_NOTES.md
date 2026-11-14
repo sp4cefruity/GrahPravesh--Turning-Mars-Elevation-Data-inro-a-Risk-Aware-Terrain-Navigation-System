@@ -16,7 +16,7 @@ Status: proposed | accepted | rejected
 
 - Which public DEM tile to use (Jezero or another) and where to download it quickly.
 - How to simulate multispectral bands and an ice signal in a way that is defensible.
-- Whether a CNN is worth it for terrain classes within our time, or if Random Forest is enough.
+- Answered: Random Forest is enough for terrain classes. See the CNN entry below.
 - What slope and roughness thresholds are used in real rover practice, so our hazard rules are cited, not guessed.
 - Sensible cost function weights, and how to justify them.
 
@@ -46,3 +46,15 @@ What we learned: no published rover slope limit was verified (`docs/MODEL_AND_BA
 Why it matters for the build: judges can see which numbers are assumptions. A sensitivity sweep (hard limit 10, 15, 20, 25) is still to do.
 Specs affected: 01-perception (open question on cited thresholds stays open).
 Status: proposed, citations still needed.
+
+### CNN versus Random Forest for terrain classes (2026-11-14, Udit)
+What we learned: A small 3-layer CNN with a 3-member ensemble, trained on the same rule pseudo-labels, scored held-out macro F1 0.130 against 0.793 for the Random Forest on tiles T4 and T5 (train on T1 to T3). Calibration was also worse (ECE 0.127 against 0.010). Full table in `specs/01-perception.md` and `outputs/cnn_eval.md`. Scores measure imitation of the rules, not accuracy on real terrain. Not tried: more training steps, step and convexity channels, rare-class patch sampling.
+Why it matters for the build: The forest stays the default. The CNN is kept behind `classifier="cnn"` as an optional experiment. torch is an optional dependency.
+Specs affected: 01-perception.
+Status: accepted
+
+### Loop guard for snapping and replanning (2026-11-14, Udit)
+What we learned: Moving a goal to a "safer" cell or replanning can oscillate between near equal options. A deterministic snap, a switch margin and revisit and replan limits prevent that.
+Why it matters for the build: The planner is one shot today, so it cannot loop. The guard is wired in for goals inside the drift margin and is off by default (`snap_goal_radius_cells = 0`).
+Specs affected: 02-planning (requirement 14).
+Status: accepted

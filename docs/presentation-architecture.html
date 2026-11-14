@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MARS-09 Odyssey: how the system works</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #ffffff; overflow: hidden; }
+  .stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: #ffffff; transform-origin: 0 0;
+            font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; color: #0f172a; }
+  h1 { position: absolute; left: 100px; top: 40px; margin: 0; font-size: 52px; line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
+  .lede { position: absolute; left: 100px; top: 112px; margin: 0; width: 1500px; font-size: 26px; line-height: 1.3; font-weight: 500; color: #334155; }
+  .box { position: absolute; box-sizing: border-box; border-radius: 14px; padding: 16px 20px; color: #ffffff;
+          display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+  .box h2 { margin: 0 0 6px; font-size: 29px; line-height: 1.12; font-weight: 700; }
+  .box p { margin: 0; font-size: 20px; line-height: 1.28; font-weight: 500; }
+  .box.big h2 { font-size: 34px; margin-bottom: 10px; }
+  .box.big p { font-size: 23px; line-height: 1.32; }
+  svg.wires { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+  .arrow { stroke: #0f172a; stroke-width: 4; stroke-linecap: butt; }
+  .foot { position: absolute; left: 100px; top: 996px; margin: 0; font-size: 26px; line-height: 1.3; font-weight: 600; color: #0f172a; }
+  .key { position: absolute; left: 100px; top: 580px; width: 280px; }
+  .key h3 { margin: 0 0 18px; font-size: 28px; line-height: 1.1; font-weight: 700; }
+  .key ul { list-style: none; margin: 0; padding: 0; }
+  .key li { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font-size: 22px; line-height: 1.2; font-weight: 500; color: #0f172a; }
+  .key li span { flex: none; width: 34px; height: 34px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <h1>MARS-09 Odyssey: how the system works</h1>
+  <p class="lede">From a real Mars elevation tile to a safe route and ranked science targets, with the uncertainty carried through every step.</p>
+  <svg class="wires" viewBox="0 0 1920 1080" aria-hidden="true">
+    <defs><marker id="head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 L12 6 L0 12 z" fill="#0f172a"/></marker></defs>
+    <line class="arrow" data-from="hirise" data-to="data" x1="380" y1="275" x2="450" y2="275" marker-end="url(#head)"/>
+<line class="arrow" data-from="sim" data-to="data" x1="380" y1="445" x2="450" y2="445" marker-end="url(#head)"/>
+<line class="arrow" data-from="data" data-to="percep" x1="730" y1="355" x2="800" y2="355" marker-end="url(#head)"/>
+<line class="arrow" data-from="percep" data-to="uncert" x1="1080" y1="355" x2="1150" y2="355" marker-end="url(#head)"/>
+<line class="arrow" data-from="uncert" data-to="cost" x1="1430" y1="355" x2="1500" y2="355" marker-end="url(#head)"/>
+<line class="arrow" data-from="uncert" data-to="science" x1="1240" y1="430" x2="1240" y2="580" marker-end="url(#head)"/>
+<line class="arrow" data-from="cost" data-to="planner" x1="1640" y1="430" x2="1640" y2="580" marker-end="url(#head)"/>
+<line class="arrow" data-from="science" data-to="planner" x1="1430" y1="625" x2="1500" y2="625" marker-end="url(#head)"/>
+<line class="arrow" data-from="planner" data-to="science" x1="1500" y1="690" x2="1430" y2="690" marker-end="url(#head)"/>
+<line class="arrow" data-from="planner" data-to="safety" x1="1640" y1="730" x2="1640" y2="800" marker-end="url(#head)"/>
+<line class="arrow" data-from="safety" data-to="result" x1="1500" y1="875" x2="1430" y2="875" marker-end="url(#head)"/>
+<line class="arrow" data-from="result" data-to="dash" x1="1150" y1="875" x2="1080" y2="875" marker-end="url(#head)"/>
+<line class="arrow" data-from="science" data-to="result" x1="1340" y1="730" x2="1340" y2="800" marker-end="url(#head)"/>
+<line class="arrow" data-from="data" data-to="key" x1="590" y1="520" x2="590" y2="580" marker-end="url(#head)"/>
+<line class="arrow" data-from="key" data-to="eval" x1="590" y1="730" x2="590" y2="800" marker-end="url(#head)"/>
+  </svg>
+  <div class="box" id="hirise" style="left:100px;top:200px;width:280px;height:150px;background:#1D4ED8"><h2>HiRISE elevation</h2><p>Real Mars terrain from NASA</p></div>
+<div class="box" id="sim" style="left:100px;top:370px;width:280px;height:150px;background:#C2410C"><h2>Simulated data</h2><p>Bands, ice, thermal, noise and gaps</p></div>
+<div class="box big" id="data" style="left:450px;top:200px;width:280px;height:320px;background:#0F766E"><h2>Data stage</h2><p>Cuts a 256 by 256 grid at 2 m, adds noise and gaps, and keeps a hidden answer key</p></div>
+<div class="box" id="percep" style="left:800px;top:280px;width:280px;height:150px;background:#0F766E"><h2>Perception</h2><p>Slope and roughness. A Random Forest predicts terrain classes</p></div>
+<div class="box" id="uncert" style="left:1150px;top:280px;width:280px;height:150px;background:#0F766E"><h2>Uncertainty</h2><p>50 Monte Carlo runs show how far slope could move</p></div>
+<div class="box" id="cost" style="left:1500px;top:280px;width:280px;height:150px;background:#0F766E"><h2>Cost map</h2><p>Cost with a spread. Steep or missing cells are blocked</p></div>
+<div class="box" id="key" style="left:450px;top:580px;width:280px;height:150px;background:#334155"><h2>Answer key</h2><p>The truth the planner never sees</p></div>
+<div class="box" id="science" style="left:1150px;top:580px;width:280px;height:150px;background:#4338CA"><h2>Science</h2><p>Finds targets and ranks them, with intervals</p></div>
+<div class="box" id="planner" style="left:1500px;top:580px;width:280px;height:150px;background:#4338CA"><h2>Planner</h2><p>Risk-aware A*. One dial from bold to cautious</p></div>
+<div class="box" id="eval" style="left:450px;top:800px;width:280px;height:150px;background:#334155"><h2>Evaluation</h2><p>Scores each tile and the science stage</p></div>
+<div class="box" id="dash" style="left:800px;top:800px;width:280px;height:150px;background:#334155"><h2>Dashboard</h2><p>Map, ranked targets, safety badge</p></div>
+<div class="box" id="result" style="left:1150px;top:800px;width:280px;height:150px;background:#334155"><h2>Saved result</h2><p>One file per run, loaded without recomputing</p></div>
+<div class="box" id="safety" style="left:1500px;top:800px;width:280px;height:150px;background:#B91C1C"><h2>Safety check</h2><p>Re-checks every route against blocked cells</p></div>
+  <p class="foot">Only the elevation is real. Every sensor layer is simulated, and the system says so wherever it shows one.</p>
+  <div class="key"><h3>Colour key</h3><ul><li><span style="background:#1D4ED8"></span>Real data</li><li><span style="background:#C2410C"></span>Simulated</li><li><span style="background:#0F766E"></span>Analysis</li><li><span style="background:#4338CA"></span>Decisions</li><li><span style="background:#B91C1C"></span>Safety</li><li><span style="background:#334155"></span>Outputs and checks</li></ul></div>
+</div>
+<script>
+  (function () {
+    var s = document.getElementById('stage');
+    function fit() {
+      var k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      s.style.transform = 'translate(' + ((window.innerWidth - 1920 * k) / 2) + 'px,' + ((window.innerHeight - 1080 * k) / 2) + 'px) scale(' + k + ')';
+    }
+    fit(); window.addEventListener('resize', fit);
+  })();
+</script>
+</body>
+</html>

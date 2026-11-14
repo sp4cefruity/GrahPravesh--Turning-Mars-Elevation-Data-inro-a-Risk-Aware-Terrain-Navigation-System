@@ -15,7 +15,7 @@ products:
     valid_range_m: [-2694.83, -2510.19]  # VALID_MINIMUM and VALID_MAXIMUM from the label, used as a sanity check
     cell_size_m: 1.0096633     # MAP_SCALE, equirectangular, true at the centre latitude
     sigma_z_m: 0.3             # assumption from "tens of centimetres" (HiRISE DTM page), not measured here
-    licence: unverified        # NASA PDS product. Confirm before committing crops.
+    licence: "No DTM specific licence stated. HiRISE images are public domain, credit NASA/JPL/University of Arizona (hirise.lpl.arizona.edu/media/usage.php). Checked 2026-11-14."
   B:
     id: DTEEC_021466_1230_021954_1230_A01
     site: Promethei Terra ice-exposing scarp area, 56.58 to 56.71 S (not confirmed to be the exact Dundas 2018 product)
@@ -28,7 +28,7 @@ products:
     valid_range_m: [2183.20, 3155.82]
     cell_size_m: 0.99541348    # MAP_SCALE. Product A is 1.0097, about 1.4% different, left as is
     sigma_z_m: 0.3             # same assumption as A
-    licence: unverified        # NASA PDS product. Confirm before committing crops.
+    licence: "No DTM specific licence stated. HiRISE images are public domain, credit NASA/JPL/University of Arizona (hirise.lpl.arizona.edu/media/usage.php). Checked 2026-11-14."
 
 # window: [row, col] of the top left pixel of a 512 x 512 crop. null until scouted.
 tiles:

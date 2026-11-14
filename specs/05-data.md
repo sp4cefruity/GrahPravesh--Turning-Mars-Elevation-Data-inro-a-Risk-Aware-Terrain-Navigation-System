@@ -45,7 +45,8 @@ Source tiles are 512 by 512 crops at about 1 m, read straight from the PDS archi
 - Product A: `DTEEC_023524_1985_023379_1985_U01`, Jezero crater, 8235 by 21258 cells, 1.0097 m per cell, about 700 MB.
 - Product B: `DTEEC_021466_1230_021954_1230_A01`, Promethei Terra ice scarp area at about 56.6 S, 6053 by 8223 cells, 0.9954 m per cell, about 199 MB. It is not confirmed to be the exact product used in Dundas et al. 2018.
 - Windows were chosen from a 64 pixel scout grid (14 by 5 on A, 12 by 5 on B), not an exhaustive search.
-- Licence of both products is unverified. Cached crops (`data/tiles/*.npz`) stay out of git until it is confirmed.
+- Licence, checked 2026-11-14: no licence or usage restriction is stated for either DTM, and no DTM specific licence text exists. HiRISE says its images are public domain with no copyright restriction and asks for the credit "NASA/JPL/University of Arizona" (https://hirise.lpl.arizona.edu/media/usage.php). That page does not mention DTMs, and the product labels carry no rights text (the only "copyright" in the label is BAE Systems for the SOCET Set software). DTMs are released through the PDS, and product A's label names USGS Astrogeology and the University of Arizona as producers. Treat the data as public, credit it, and do not claim a formal licence.
+- Cached crops (`data/tiles/*.npz`) are still out of git. Whether to commit them (about 3 MB) is a team decision.
 
 ## Requirements
 
@@ -96,6 +97,7 @@ Checked by `tests/test_data.py` (16 tests, 5 of them on the real tiles T1 to T5)
 - Udit: add `tile_id` (default "T1") to `PipelineConfig`. Until then the tile is `odyssey.data.DEFAULT_TILE`.
 - Udit: `docs/ARCHITECTURE.md` and `README.md` still say one tile, a 512 by 512 crop and a 700 MB download, and list the SegFormer side track.
 - Saptarshi: `find_candidates` takes the highest few peaks of the whole ice and geology map (about 3 ice and 2 geology by default), so it mostly misses the planted targets. On T1 and T3 at most 2 of 10 were found, even with the planted signal made 5 times stronger. Options: score against the clean material fields instead of the planted blobs (add them to `SceneTruth`), or raise `n_candidates` for evaluation runs.
-- Saptarshi: confirm the licence of both products before committing any crops.
+- Saptarshi: decide whether to commit the cached crops. No restriction was found, but no DTM specific licence statement exists either.
+- Udit: the README dataset section should name both product ids and credit them as "NASA/JPL/University of Arizona".
 - Saptarshi: build the synthetic DEM fallback and the artifact flags, or cut them from the spec.
 - Disha: perception received NaN in `dem` without crashing on all five tiles. Confirm that is the behaviour you want.

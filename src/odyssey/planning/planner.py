@@ -18,6 +18,7 @@ from ..contracts import (Candidate, Cell, CostMap, HazardMap, MODES, PathResult,
                          RiskCurvePoint, SegmentCost, TerrainGrid)
 from .coarse import CoarseGrid, factor as coarse_factor, make_coarse, upsample
 from .costmap import build_cost_map, inflate_blocked
+from .progress import NoProgress, ProgressGuard, snap_to_safe
 from .safety import SafetyViolation, verify_path
 from .search import (SearchResult, astar, corridor, cvar_k, dijkstra, path_length_cells,
                      price_grid)
@@ -82,6 +83,21 @@ def plan_one(terrain: TerrainGrid, cost_map: CostMap, start: Cell, goal: Cell, m
     price = price_grid(cost_map.cost_mean, cost_map.cost_std, p.base_cost, alpha)
 
     res = astar(price, passable, start, goal, p.base_cost)
+    snapped_from: Optional[Cell] = None
+    if not res.cells and p.snap_goal_radius_cells > 0 and inflated[goal] and not cost_map.blocked[goal]:
+        # Goal sits in the drift margin only. Snap it once to the nearest passable cell (spec 02, req 14).
+        snap = snap_to_safe(passable, goal, p.snap_goal_radius_cells)
+        if snap is not None:
+            snapped_from, goal = goal, snap
+            res = astar(price, passable, start, goal, p.base_cost)
+    if res.cells and snapped_from is not None:
+        guard = ProgressGuard()
+        try:
+            guard.replan()
+            for c in res.cells:
+                guard.visit(c)
+        except NoProgress as e:
+            return _no_path(mode, alpha, candidate_id, f"no progress: {e}", None)
     if not res.cells:
         if cost_map.blocked[goal]:
             why = "goal cell is a hard block or has no valid data"
@@ -109,6 +125,7 @@ def plan_one(terrain: TerrainGrid, cost_map: CostMap, start: Cell, goal: Cell, m
         min_feasible_risk=None, baseline=None, candidate_id=candidate_id,
         segments=_segments(res.cells, price, cost_map, terrain, p.base_cost, alpha),
         nodes_expanded=res.expanded, dijkstra_cost=dij_cost, dijkstra_nodes_expanded=dij_exp,
+        snapped_from=snapped_from,
     )
 
 

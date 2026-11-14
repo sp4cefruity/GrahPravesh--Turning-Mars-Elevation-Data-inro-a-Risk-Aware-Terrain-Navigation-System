@@ -48,6 +48,7 @@ In: `TerrainGrid`, complete `HazardMap` (including `hard_block`, `slope_std_deg`
     - `ProgressGuard` tracks the cells visited and the replans used. `allow_switch(old_cost, new_cost)` accepts a new route only if it is cheaper by more than `switch_margin` (relative, default 0.05, an assumption), so two near equal routes cannot alternate.
     - `ProgressGuard.visit(cell)` raises `NoProgress` when a cell is entered more than `max_revisits` times (default 2, an assumption). `ProgressGuard.replan()` raises `NoProgress` after `max_replans` (default 10, an assumption).
     - `NoProgress` fails loudly with a reason, like the safety check. The result is "no safe path", never a risky path.
+    - Wired in `plan_one`: when the goal is inside the drift margin only (not a true block) and `snap_goal_radius_cells` is above 0 (default 0, off), the goal is snapped once with `snap_to_safe`, the route is walked through `ProgressGuard`, and `PathResult.snapped_from` holds the original goal. Off by default, so the result stays "no safe path" with the reason.
     - Dynamic replanning itself stays out of scope. This requirement only makes sure that when it is added, it cannot loop.
 
 ## Acceptance checks

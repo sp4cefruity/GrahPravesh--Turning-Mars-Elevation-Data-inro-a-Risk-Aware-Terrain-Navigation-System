@@ -39,6 +39,9 @@ class PlanningConfig:
     inflate_r0: float = 1.0
     inflate_growth: float = 0.01
     corridor_tau: float = 0.10
+    # 0 keeps today's behaviour (goal inside the drift margin means no safe path). Above 0, the goal is
+    # snapped once to the nearest passable cell within this many cells (assumption, spec 02 req 14).
+    snap_goal_radius_cells: float = 0.0
     cross_check_dijkstra: bool = True
     # risk curve and baselines
     risk_curve_alphas: tuple[float, ...] = (0.0, 0.5, 0.8, 0.9, 0.95, 0.99)

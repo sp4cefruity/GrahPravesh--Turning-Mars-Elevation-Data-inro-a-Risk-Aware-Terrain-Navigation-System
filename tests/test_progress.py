@@ -45,3 +45,32 @@ def test_near_equal_route_is_rejected_but_clear_gain_is_accepted():
     assert g.allow_switch(100.0, 90.0)
     assert g.allow_switch(float("inf"), 50.0)
     assert not g.allow_switch(float("inf"), float("inf"))
+
+
+def _margin_scene():
+    from test_planning import _scene
+    terrain, haz = _scene(wall=False)
+    haz.hard_block[10, 20] = True  # single block, margin r0 = 1 cell around it
+    return terrain, haz
+
+
+def test_goal_in_drift_margin_is_a_clear_failure_by_default():
+    from odyssey.config import PipelineConfig
+    from odyssey.planning import build_cost_map, plan_one
+    terrain, haz = _margin_scene()
+    cm = build_cost_map(terrain, haz, PipelineConfig())
+    pr = plan_one(terrain, cm, (10, 2), (10, 21), "bold", PipelineConfig())
+    assert not pr.cells and "drift margin" in pr.no_safe_path_reason
+
+
+def test_goal_in_drift_margin_snaps_once_when_enabled():
+    import dataclasses
+    from odyssey.config import PipelineConfig
+    from odyssey.planning import build_cost_map, plan_one
+    terrain, haz = _margin_scene()
+    base = PipelineConfig()
+    cfg = dataclasses.replace(base, planning=dataclasses.replace(base.planning, snap_goal_radius_cells=3.0))
+    cm = build_cost_map(terrain, haz, cfg)
+    pr = plan_one(terrain, cm, (10, 2), (10, 21), "bold", cfg)
+    assert pr.safe and pr.snapped_from == (10, 21)
+    assert pr.cells[-1] != (10, 21) and not cm.blocked[pr.cells[-1]]

@@ -112,6 +112,7 @@ class PathResult:
     nodes_expanded: int = 0
     dijkstra_cost: Optional[float] = None  # optimality cross-check
     dijkstra_nodes_expanded: Optional[int] = None
+    snapped_from: Optional[Cell] = None  # original goal when it was moved to a nearby passable cell
 
 
 @dataclass

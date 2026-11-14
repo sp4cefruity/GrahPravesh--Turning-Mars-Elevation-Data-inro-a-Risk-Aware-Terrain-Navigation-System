@@ -3,20 +3,10 @@ import time
 
 import numpy as np
 import pytest
-from scipy.ndimage import gaussian_filter
 
-from odyssey.data.dem import DemTile, _config, load_tile
+from odyssey.data.dem import _config, load_tile
 from odyssey.data.scene import BANDS, K, block_mean, build_scene, correlated_noise, degrade_dem, make_rngs
-
-
-def fake_tile(nan_patch=False):
-    """Stand-in terrain for tests only. Not a data source."""
-    z = gaussian_filter(np.random.default_rng(1).standard_normal((512, 512)), 30) * 200
-    z = z.astype("f4")
-    valid = np.ones(z.shape, bool)
-    if nan_patch:
-        z[100:140, 100:140], valid[100:140, 100:140] = np.nan, False
-    return DemTile("fake", z, valid, 1.0097, 0.3, "fake", "none", (0, 0))
+from synthetic import fake_tile
 
 
 def test_streams_are_reproducible_and_independent():
@@ -125,3 +115,64 @@ def test_real_tile_loads_caches_and_builds_a_scene(tid):
     assert not a.valid_mask[truth.gap_mask].any()
     assert all(a.valid_mask[x["row"], x["col"]] for x in truth.targets)
     assert truth.dem_truth.shape == (512, 512) and a.dem.shape == (256, 256)
+
+
+def test_clean_bands_are_the_answer_key():
+    s, t = build_scene(fake_tile(nan_patch=True), seed=3, noise_level=0.0)
+    cb = t.clean_bands
+    assert set(cb) == {"ice_simulated", "thermal_simulated", "mineral_simulated"}
+    assert all(a.shape == (256, 256) and np.isfinite(a).all() for a in cb.values())  # no NaN: gaps are not in the truth
+    assert np.array_equal(cb["ice_simulated"], cb["thermal_simulated"])              # sensors agree before the fault
+    assert not np.allclose(cb["ice_simulated"][t.conflict_zone], 0.9)                # the conflict fault is not in the truth
+    ok = s.valid_mask & ~t.conflict_zone                                             # with no noise the scene equals the truth
+    for k, a in cb.items():
+        assert np.allclose(s.bands[k][ok], a[ok], atol=1e-6)
+
+
+def test_clean_bands_do_not_depend_on_noise_level():
+    _, lo = build_scene(fake_tile(), seed=3, noise_level=0.5)
+    _, hi = build_scene(fake_tile(), seed=3, noise_level=2.0)
+    assert all(np.array_equal(lo.clean_bands[k], hi.clean_bands[k]) for k in lo.clean_bands)
+
+
+START_BLOCKED_SEEDS = (196, 248, 268, 288)  # found by scanning 300 seeds on T1: a gap lands on the start cell (8, 8)
+
+
+def test_without_keep_clear_a_gap_can_cover_the_start_cell():
+    tile = load_tile("T1")
+    assert all(not build_scene(tile, seed=sd)[0].valid_mask[8, 8] for sd in START_BLOCKED_SEEDS)
+
+
+def test_keep_clear_leaves_the_start_area_visible_for_every_known_bad_seed():
+    tile = load_tile("T1")
+    for sd in START_BLOCKED_SEEDS:
+        s, t = build_scene(tile, seed=sd, keep_clear=(8, 8))
+        assert s.valid_mask[2:15, 2:15].all() and not t.gap_mask[2:15, 2:15].any()
+
+
+def test_keep_clear_changes_nothing_for_seeds_whose_gaps_stay_away():
+    tile = load_tile("T1")
+    plain, tp = build_scene(tile, seed=0)
+    kept, tk = build_scene(tile, seed=0, keep_clear=(8, 8))
+    assert np.array_equal(tp.gap_mask, tk.gap_mask) and np.array_equal(plain.dem, kept.dem, equal_nan=True)
+    assert tp.targets == tk.targets
+    far, _ = build_scene(tile, seed=196, keep_clear=(8, 8))
+    gone = tp.gap_mask.sum()
+    assert gone > 0 and far.valid_mask.mean() < 1.0                       # gaps elsewhere are still there
+
+
+def test_keep_clear_near_a_corner_or_edge_does_not_wrap_around():
+    tile = load_tile("T1")
+    _, t = build_scene(tile, seed=0, keep_clear=(0, 0))
+    assert not t.gap_mask[:7, :7].any()                                   # a negative index must not clear the far edge
+    assert t.gap_mask.sum() == build_scene(tile, seed=0)[1].gap_mask[7:, :].sum() + build_scene(tile, seed=0)[1].gap_mask[:7, 7:].sum()
+
+
+def test_the_pipeline_data_stage_keeps_whatever_start_cell_the_config_names_visible():
+    import dataclasses
+    from odyssey.config import PipelineConfig, Seeds
+    from odyssey.data import load_terrain
+    for start in ((8, 8), (100, 140)):
+        for sd in START_BLOCKED_SEEDS:
+            cfg = dataclasses.replace(PipelineConfig(), seeds=Seeds(data=sd), start=start)
+            assert load_terrain(cfg).valid_mask[start]

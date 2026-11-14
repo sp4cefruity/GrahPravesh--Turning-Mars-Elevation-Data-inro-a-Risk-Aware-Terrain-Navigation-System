@@ -9,7 +9,7 @@ def load_scene(config):
     """Returns (TerrainGrid, SceneTruth). The truth is for evaluation only, never for the planner."""
     # shortcut: PipelineConfig has no tile_id yet (Udit owns it), so fall back to DEFAULT_TILE.
     tile = load_tile(getattr(config, "tile_id", DEFAULT_TILE))
-    return build_scene(tile, seed=config.seeds.data, noise_level=config.noise_level)
+    return build_scene(tile, seed=config.seeds.data, noise_level=config.noise_level, keep_clear=tuple(config.start))
 
 
 def load_terrain(config):

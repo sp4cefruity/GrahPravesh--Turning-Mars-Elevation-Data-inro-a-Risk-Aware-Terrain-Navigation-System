@@ -93,18 +93,23 @@ class SceneTruth:  # for evaluation only, never given to the planner
     targets: list
     conflict_zone: np.ndarray
     gap_mask: np.ndarray
+    clean_bands: dict  # ice, thermal, mineral as they really are: no sensor noise, no gaps, no conflict fault
 
-def build_scene(tile: DemTile, seed=0, noise_level=1.0):
+def build_scene(tile: DemTile, seed=0, noise_level=1.0, keep_clear=None, clear_radius=6):
     rng = make_rngs(seed)
     clean, dem = degrade_dem(tile, rng["dem_noise"], noise_level)
     ab = abundances(rng["materials"], clean, tile.cell_size_m * K)
     gaps = gap_mask(rng["gaps"], clean.shape)
+    if keep_clear is not None:  # the landing area is always seen, so a gap can never block the rover's start
+        r, c = keep_clear
+        gaps[max(r - clear_radius, 0):r + clear_radius + 1, max(c - clear_radius, 0):c + clear_radius + 1] = False
     valid = ~np.isnan(clean) & ~gaps
     targets = plant_targets(rng["targets"], valid)
     paint(ab, targets)
     zone = conflict_zone(rng["targets"], valid)
 
     bands, ice, thermal, mineral = make_bands(ab)
+    clean_bands = {"ice_simulated": ice.copy(), "thermal_simulated": thermal.copy(), "mineral_simulated": mineral.copy()}
     ice[zone], thermal[zone] = 0.9, 0.1  # ice sensor says ice, thermal says not ice: they disagree
 
     sigma = 0.03 * noise_level  # band noise, independent per cell
@@ -119,4 +124,4 @@ def build_scene(tile: DemTile, seed=0, noise_level=1.0):
               f"2 m block mean plus simulated noise")
     grid = TerrainGrid(dem=dem, valid_mask=valid, cell_size_m=tile.cell_size_m * K, bands=out,
                        simulated_layers=list(out), source=source)
-    return grid, SceneTruth(tile.dem, targets, zone, gaps)
+    return grid, SceneTruth(tile.dem, targets, zone, gaps, clean_bands)

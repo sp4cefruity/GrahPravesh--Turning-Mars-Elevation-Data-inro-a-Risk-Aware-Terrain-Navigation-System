@@ -4,6 +4,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 from odyssey.contracts import TerrainGrid
+from odyssey.data.dem import DemTile
 
 
 def synthetic_terrain(config, n=64):
@@ -23,3 +24,13 @@ def synthetic_terrain(config, n=64):
         simulated_layers=["dem", "ice_simulated", "mineral_simulated"],
         source="synthetic test scene",
     )
+
+
+def fake_tile(nan_patch=False):
+    """Stand-in 512 by 512 source tile: smooth relief, optionally with a missing patch. Not a data source."""
+    z = gaussian_filter(np.random.default_rng(1).standard_normal((512, 512)), 30) * 200
+    z = z.astype("f4")
+    valid = np.ones(z.shape, bool)
+    if nan_patch:
+        z[100:140, 100:140], valid[100:140, 100:140] = np.nan, False
+    return DemTile("fake", z, valid, 1.0097, 0.3, "fake", "none", (0, 0))

@@ -2,8 +2,6 @@
 
 HackInnovision 2026, Track A: Planetary Reconnaissance and Autonomous Navigation.
 
-![How the system works: real elevation and simulated sensors flow through data, perception, uncertainty and the cost map to the planner and science, then a safety check, a saved result and the dashboard](docs/presentation-architecture.png)
-
 > Status: working prototype. The pipeline runs end to end on five real Mars tiles and a Streamlit dashboard shows the result. An HTML dashboard is in progress.
 
 ## What it does
@@ -22,10 +20,11 @@ MARS-09 is a Mars rover planner that works from orbital data. It starts from a r
 - **Science ranking.** Candidates, then a 1000 draw ranking Monte Carlo that gives each target a rank interval, a probability of being in the top 3, and a written evidence string.
 - **Dashboard.** A Streamlit page with the cost map, the route, ranked targets with confidence bands, a safety badge, and controls for noise, missing data, rover mode and planner.
 - **Measurement.** A per-tile results table, and a score of the science stage against the hidden answer key.
+- **A rover sandbox.** The landing page, `web/index.html`, lets you drop craters, move the start and the goal, and turn the rover's dials, with the route recomputed on every change. It is a simplified browser version of the planner on a simulated surface.
 
 ## How the system works
 
-The slide above is the short version. Each run takes one tile through these stages in a fixed order. Every stage hands the next one a typed object (the contracts are in `docs/ARCHITECTURE.md`), and a stage that breaks its contract stops the run.
+Each run takes one tile through these stages in a fixed order. Every stage hands the next one a typed object (the contracts are in `docs/ARCHITECTURE.md`), and a stage that breaks its contract stops the run.
 
 | Step | What happens | Code |
 |---|---|---|
@@ -79,9 +78,11 @@ pytest
 
 - `python setup_env.py --core` skips the dashboard packages (Streamlit, Plotly, pandas).
 - The five tile crops are in `data/tiles/`, so nothing is downloaded. A new tile window fetches about 1 MB from NASA PDS the first time.
-- The pins were tested on Python 3.14. See Known limitations if installation fails on an older Python.
+- The pins install on Python 3.11 and 3.14. The full test suite was run on them with Python 3.11.
 
 Other commands:
+
+Open `web/index.html` in a browser for the landing page and the rover sandbox. It needs no server.
 
 ```bash
 python -m odyssey.pipeline --config my.json --force       # a different configuration, recomputed
@@ -135,7 +136,7 @@ Repository map:
 | `data/tiles/` | The five cached tile crops |
 | `docs/`, `specs/` | Architecture, results, research notes, the demo script, and one spec per module |
 | `tests/` | One test file per module, plus the real-tile checks |
-| `web/` | The project landing page |
+| `web/` | The project landing page, including the rover sandbox |
 
 ## Data and assumptions
 
@@ -174,7 +175,7 @@ Data and science are listed here. The planner and dashboard limits are for Udit 
 - **Planted targets are not a detection test.** The science stage finds about 3 percent of them, so they are a diagnostic only.
 - **Not built:** the synthetic elevation fallback and the flags for stereo artifacts in the elevation model.
 - **Licence:** no licence is stated for the elevation models themselves. HiRISE images are public domain and credit is given.
-- **Install pins.** The versions in `requirements.txt` were tested on Python 3.14. On Python 3.11.9 we found no installable `numpy==2.5.4`, so `setup_env.py` fails there. Use Python 3.14, or loosen the pins.
+- **Install pins.** The versions in `requirements.txt` install on Python 3.11 and 3.14 (checked with pip's resolver on both), and the full test suite passed on them with Python 3.11 on Windows. The 3.14 check was the resolver only, not a run. The optional `torch` pin was resolved but not installed.
 - **The HTML dashboard is not finished.** The Streamlit dashboard is the working one. The exporter that feeds the HTML page exists.
 
 ## How this maps to the judging criteria

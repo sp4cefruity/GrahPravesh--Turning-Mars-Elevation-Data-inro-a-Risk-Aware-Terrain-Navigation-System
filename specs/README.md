@@ -21,7 +21,7 @@ Only the status line changes between stages. If requirements change after approv
 | `01-perception.md` (includes DEM Monte Carlo) | Disha | approved |
 | `02-planning.md` | Udit | approved |
 | `03-uncertainty-science.md` (science ranking) | Saptarshi | approved |
-| `04-dashboard.md` | Disha | draft (HTML and JS, needs re-approval) |
+| `04-dashboard.md` | Disha | approved |
 | `05-data.md` | Saptarshi | approved |
 
 Use `TEMPLATE.md` for any new spec.

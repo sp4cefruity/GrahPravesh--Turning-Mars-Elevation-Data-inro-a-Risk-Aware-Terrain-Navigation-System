@@ -1,6 +1,6 @@
 # Spec 04: Dashboard
 
-Status: draft (revised 2026-11-14: frontend changed to HTML and JS at Disha's request, Udit to re-approve)
+Status: approved
 Owner: Disha
 Reviewer: Udit
 Serves criteria: usability, explainability, uncertainty

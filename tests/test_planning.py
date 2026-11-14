@@ -133,10 +133,17 @@ def test_b1_reference_cost_uses_friction_and_elevation():
     assert max(r for r, _ in b1.cells) >= 3  # leaves the low friction rows although start and goal are in them
 
 
+def test_b1_friction_table_covers_every_perception_class_and_falls_with_difficulty():
+    from odyssey.perception.hazards import CLASS_NAMES
+    table = PlanningConfig().b1_friction_by_class
+    assert len(table) == len(CLASS_NAMES)  # a class past the end would silently get the fallback
+    assert list(table) == sorted(table, reverse=True)  # smooth, moderate slope, rough, crater rim, steep
+
+
 def test_b1_fallback_when_classes_are_unknown():
     n = 12
     terrain, haz = _scene(n)
-    haz.terrain_class = np.full((n, n), 7, int)  # label outside the 3 entry table
+    haz.terrain_class = np.full((n, n), 7, int)  # label outside the table
     cm = build_cost_map(terrain, haz, PipelineConfig())
     cfg = PipelineConfig(start=(0, 0))
     b1 = plan_extras(terrain, haz, cm, (n - 1, n - 1), cfg).baseline_paths["b1"]

@@ -45,10 +45,11 @@ class PlanningConfig:
     violation_p_haz: float = 0.5  # a path cell above this counts as a hazard violation (assumption)
     b0_slope_limit_deg: float = 15.0  # baseline B0 blocks cells steeper than this
     # Baseline B1, reference reproduction of Brad and Balog, Electronics 2025: cost = z / (friction + eps).
-    # Friction per terrain class label, index = HazardMap.terrain_class. The paper uses hand-set values
-    # from 0.1 (water) to 0.9 (concrete). These defaults are assumptions for 3 stub classes
-    # (0 flat, 1 sloped, 2 steep). Labels beyond the table, or a missing class map, use the fallback.
-    b1_friction_by_class: tuple[float, ...] = (0.9, 0.6, 0.3)
+    # Friction per terrain class label, index = HazardMap.terrain_class, in the order of
+    # perception.hazards.CLASS_NAMES: 0 smooth, 1 moderate slope, 2 rough, 3 crater rim, 4 steep.
+    # The paper uses hand-set values from 0.1 (water) to 0.9 (concrete). These are assumptions, ordered by
+    # how hard the class is to drive on. Labels beyond the table, or a missing class map, use the fallback.
+    b1_friction_by_class: tuple[float, ...] = (0.9, 0.6, 0.5, 0.3, 0.2)
     b1_friction_fallback: float = 0.5  # assumption, mid range of the paper's 0.1 to 0.9
     b1_eps: float = 0.05  # the paper's eps, keeps the division finite (assumption)
     b1_z_offset_m: float = 1.0  # z = dem - min(dem) + offset, so cost stays positive (assumption)

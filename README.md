@@ -25,7 +25,7 @@ TODO (Udit): install and run steps. Must work from a clean checkout.
 
 ## Architecture
 
-See `docs/ARCHITECTURE.md`.
+See `docs/ARCHITECTURE.md`. The pipeline as a diagram, with the source lines behind each box: `docs/architecture-diagram.html` (open it in a browser).
 
 ## Data and assumptions
 
@@ -53,7 +53,17 @@ None of these numbers is fitted to rover data. Every one is a working assumption
 
 ## Known limitations
 
-TODO (all, by 8:45 AM). Be specific and honest.
+Data and science (the planner and dashboard limits are for Udit and Disha to add):
+
+- **Only the elevation is real.** The spectral, ice, thermal and mineral bands, the noise, the gaps and the sensor conflict are simulated, so the science ranking says nothing about real ice or minerals.
+- **Thermal inertia is simulated.** Real THEMIS thermal inertia (a 1.7 MB Jezero map, CC BY 4.0, and published Perseverance values of 180 to 605) has been checked as a source but is not integrated yet. It is the next priority.
+- **The stated 90 percent confidence intervals are too narrow.** Measured against the simulated truth on 90 scenes, they hold the true value about 74 percent of the time and the true rank about 75 percent. They have not been calibrated yet, and the measurement is against our own simulation.
+- **Terrain classes are not an independent check.** The Random Forest learns labels made by our own rules.
+- **A small area, one rover, a static map.** Each run covers about 0.5 km square on a 256 by 256 grid at about 2 m, with no wheel slip or power model.
+- **Two sites, five tiles, one seed each in the results table.** `docs/TILE_RESULTS.md` is a snapshot, not an average, and sites are never pooled.
+- **Planted targets are not a detection test.** The science stage finds about 3 percent of them, so they are a diagnostic only.
+- **Not built:** the synthetic elevation fallback and the flags for stereo artifacts in the elevation model.
+- **Licence:** no licence is stated for the elevation models themselves. HiRISE images are public domain and credit is given.
 
 ## How this maps to the judging criteria
 

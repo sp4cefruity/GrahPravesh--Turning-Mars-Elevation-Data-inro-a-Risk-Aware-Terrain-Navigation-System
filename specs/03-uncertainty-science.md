@@ -60,5 +60,5 @@ Bayesian deep models, real spectral unmixing, tour planning across targets.
 ## Open questions
 
 - Ice signal model is shared with `specs/05-data.md`. Saptarshi owns both, so decide it there.
-- Saptarshi: the intervals cover the truth about 74 percent of the time against the 90 percent they state. Decide whether to widen them (for example by raising the sensor and conflict gains in `model.py`) or to state the measured coverage in the README instead.
+- Decided 2026-11-14: the intervals cover the truth about 74 percent of the time against the 90 percent they state. State the measured coverage now (done in the README and above). Calibrate only if time remains: fit one scale factor on T1, the tuning tile, and check it on the held-out tiles T2 to T5 with `python -m odyssey.science.evaluate`. No change has been made to the model.
 - Saptarshi: on the synthetic test scene the injected conflict zone is the brightest ice peak, so the top ice candidates sat inside it (estimated 1.0 where the truth was about 0.03). This was seen on the synthetic scene only and not measured on the real tiles.

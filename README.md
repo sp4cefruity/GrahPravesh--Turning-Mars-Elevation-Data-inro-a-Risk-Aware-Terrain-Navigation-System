@@ -42,7 +42,7 @@ See `docs/ARCHITECTURE.md`.
 
 None of these numbers is fitted to rover data. Every one is a working assumption unless `docs/RESEARCH_NOTES.md` cites it.
 
-- **Terrain classes are rule-derived pseudo-labels.** There is no labelled Mars terrain data in this project. Perception first labels each cell with hand-set rules on slope, roughness and crater rims (5 classes). A Random Forest is then trained on those labels. Its tree votes give the class probabilities and the epistemic spread. Because it learns the rules it was given, it agrees with them by construction. It is not an independent check on the rules.
+- **Terrain classes are rule-derived pseudo-labels.** There is no labelled Mars terrain data in this project. Perception first labels each cell with hand-set rules on slope, roughness and crater rims (5 classes). A Random Forest is then trained on those labels. Its tree votes give the class probabilities and the epistemic spread. Because it learns the rules it was given, it agrees with them by construction. It is not an independent check on the rules. An optional small CNN (`classifier="cnn"`, needs torch) was tried in the same role. It did not match the forest on held-out tiles (macro F1 0.13 against 0.79, see `specs/01-perception.md`), so the forest is the default and the CNN is an experiment only.
 - **Perception thresholds are assumptions.** This covers the slope centre (20 degrees), the roughness scale (0.25 m), the rim rule, the DEM noise (0.3 m) and the noise correlation length (20 m). They live in `src/odyssey/perception/params.py` and can be overridden through the `perception` field of `PipelineConfig`.
 - **Science value is a documented score, not science.** All spectral bands are simulated, so nothing here is a claim about real ice or minerals. The formulas are in `src/odyssey/science/model.py`, all on a 0 to 1 scale:
   - Ice value is the simulated ice band, scaled from its 2nd percentile to its maximum over valid cells.
@@ -66,3 +66,5 @@ Udit Arun Nath, Disha, Saptarshi.
 ## Libraries and external resources
 
 TODO: list every dataset, library and API used.
+
+- PyTorch (`torch`, optional): only for the CNN terrain classifier experiment. The pipeline runs without it.

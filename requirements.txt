@@ -9,6 +9,10 @@ pytest==9.2.0
 requests==2.34.2
 pyyaml==6.0.2
 
+# Optional: CNN terrain classifier experiment (specs/01-perception.md). The pipeline runs without it
+# and falls back to the Random Forest. CPU build is enough.
+torch==2.15.0
+
 # Current Streamlit dashboard only. Remove these three when the HTML and JS frontend replaces it.
 streamlit==1.67.0
 plotly==7.1.0

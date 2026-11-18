@@ -1,10 +1,4 @@
-# MARS-09 Odyssey
-
-HackInnovision 2026, Track A: Planetary Reconnaissance and Autonomous Navigation.
-
-> Status: working prototype. The pipeline runs end to end on five real Mars tiles and a Streamlit dashboard shows the result. An HTML dashboard is in progress.
-
-## What it does
+GrahPravesh! 
 
 MARS-09 is a Mars rover planner that works from orbital data. It starts from a real HiRISE elevation tile, works out which ground is safe and how sure it is, plans a route to the most valuable science targets, and checks that route a second time before showing it. Every result carries its uncertainty, and anything simulated is labelled as simulated.
 
